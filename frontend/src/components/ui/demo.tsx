@@ -12,4 +12,4 @@ const WORKS:WorksWheelItem[]=[
  {title:'Find your direction',image:ART('photo-1472396961693-142e6e269027'),href:'/create'},
  {title:'Endless possibility',image:ART('photo-1469474968028-56623f02e42e'),href:'/create'},
 ];
-export default function WorksWheelDemo(){return <div className="wheelDemo bg-background text-foreground w-full"><WorksWheel items={WORKS} label="Stories in orbit" action="Create"/></div>}
+export default function WorksWheelDemo({onCreate}:{onCreate?:()=>void}={}){return <div className="wheelDemo bg-background text-foreground w-full"><WorksWheel items={WORKS} label="Stories in orbit" action="Create" onActivate={onCreate?()=>onCreate():undefined}/></div>}

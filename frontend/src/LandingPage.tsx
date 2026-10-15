@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ArrowRight, ArrowUpRight, Check, CheckCircle2, ChevronLeft, ChevronRight,
   CircleHelp, Clock3, Download, FilePenLine, Layers3, Menu, MousePointer2,
@@ -7,7 +7,7 @@ import {
 import { request } from './api';
 import './landing.css';
 
-const CreativeWheel = lazy(() => import('./components/ui/demo'));
+import CreativeWheel from './components/ui/demo';
 type Theme = 'midnight' | 'paper';
 type Wallet = { balance:number; generation_cost:number; edit_cost:number; model_mode:'ai'|'outline'|string };
 type Props = { authenticated:boolean; navigate:(path:string)=>void; onCreate:(prompt:string,count:number)=>void; onLogout:()=>void };
@@ -56,7 +56,6 @@ export default function LandingPage({authenticated,navigate,onCreate,onLogout}:P
   const [step,setStep]=useState(0);
   const [theme,setTheme]=useState<Theme>('midnight');
   const [galleryFilter,setGalleryFilter]=useState('All');
-  const [wheelOpen,setWheelOpen]=useState(false);
   const [wallet,setWallet]=useState<Wallet|null>(null);
   useReveal();
   useEffect(()=>{const handle=()=>setNavSolid(window.scrollY>18);handle();window.addEventListener('scroll',handle,{passive:true});return()=>window.removeEventListener('scroll',handle)},[]);
@@ -77,11 +76,10 @@ export default function LandingPage({authenticated,navigate,onCreate,onLogout}:P
       <button className="lp-nav__toggle" aria-label={menuOpen?'Close navigation':'Open navigation'} aria-expanded={menuOpen} onClick={()=>setMenuOpen(!menuOpen)}>{menuOpen?<X size={23}/>:<Menu size={23}/>}</button>
     </header>
     <main>
-      <section className="lp-hero" aria-labelledby="lp-heading">
-        <div className="lp-hero__noise" aria-hidden="true"/><div className="lp-hero__raster" aria-hidden="true"/>
-        <div className="lp-hero__body"><div className="lp-hero__copy"><div className="lp-eyebrow"><span className="lp-eyebrow__line"/> THE ART OF PRESENTING, REIMAGINED <span className="lp-eyebrow__index">/ 001</span></div><h1 id="lp-heading">Your Ideas.<br/><em>Beautifully</em><br/>Presented<span className="lp-hero__period">.</span></h1><p className="lp-hero__description">A single idea deserves a powerful story. Turn a topic into a structured presentation, refine it your way, and export a real PowerPoint deck.</p><div className="lp-hero__actions"><button className="lp-button lp-button--primary" onClick={()=>create('')}>Create your presentation <ArrowUpRight size={19}/></button><button className="lp-button lp-button--secondary" onClick={()=>section('templates')}>Explore examples <ArrowRight size={17}/></button></div><div className="lp-hero__proof"><span><Check size={14}/> Editable slides</span><span><Check size={14}/> Real PPTX export</span><span><Check size={14}/> You stay in control</span></div></div>
-          <div className="lp-hero__art" aria-label="A layered illustration of presentation slides"><div className="lp-hero__halo"/><div className="lp-hero__ring lp-hero__ring--one"/><div className="lp-hero__ring lp-hero__ring--two"/><div className="lp-hero__beam"/><div className="lp-hero__deck lp-hero__deck--back"><SampleSlide miniature theme="paper" title="The next great chapter." number="03"/></div><div className="lp-hero__deck lp-hero__deck--middle"><SampleSlide miniature theme="midnight" title="A world of possibility." number="02"/></div><div className="lp-hero__deck lp-hero__deck--front"><SampleSlide theme="midnight" title="Make something remarkable." number="01"/></div><div className="lp-hero__floating lp-hero__floating--one"><Sparkles size={13}/> IDEAS → IMPACT</div><div className="lp-hero__floating lp-hero__floating--two"><span/> DESIGN IS IN THE DETAILS</div></div></div>
-        <div className="lp-hero__bottom"><span><i/> SCROLL TO EXPLORE</span><span>DESIGNED FOR MOMENTS THAT MATTER <span className="lp-hero__arrow">↘</span></span></div>
+      <section className="lp-entry" aria-labelledby="lp-heading">
+        <div className="lp-entry__intro"><span className="lp-tag">PRESENTATIONS, IN MOTION</span><h1 id="lp-heading">Your ideas.<br/><em>In orbit.</em></h1></div>
+        <div className="lp-entry__wheel"><CreativeWheel onCreate={()=>create('')}/></div>
+        <div className="lp-entry__footer"><div><button className="lp-button lp-button--primary" onClick={()=>create('')}>Create your presentation <ArrowUpRight size={19}/></button><p>One idea. A whole new perspective.</p></div><div className="lp-entry__explore"><span>SCROLL, DRAG, OR USE ↑ ↓ TO EXPLORE</span><button onClick={()=>section('experience')}>Discover the studio <ArrowRight size={17}/></button></div></div>
       </section>
 
       <div className="lp-marquee" aria-label="Product benefits"><div className="lp-marquee__inner" aria-hidden="true">{Array.from({length:2},(_,i)=><span key={i}>FROM IDEA TO DECK <b>✳</b> CREATE WITH CLARITY <b>✳</b> REFINE WITH CONTROL <b>✳</b> PRESENT WITH CONFIDENCE <b>✳</b></span>)}</div></div>
@@ -99,7 +97,6 @@ export default function LandingPage({authenticated,navigate,onCreate,onLogout}:P
 
       <section id="templates" className="lp-section lp-gallery"><div className="lp-section__intro lp-reveal"><span className="lp-tag">03 / CREATIVE DIRECTIONS</span><div className="lp-section__heading"><h2>Not just slides.<br/><em>Different perspectives.</em></h2><p>Six example directions to spark your next story. These are concept previews, not selectable production templates.</p></div></div><div className="lp-gallery__filters lp-reveal" role="group" aria-label="Filter presentation examples">{['All','BUSINESS & STRATEGY','EDUCATION','TECHNOLOGY','FINANCE','RESEARCH','CREATIVE'].map(f=><button key={f} aria-pressed={galleryFilter===f} className={galleryFilter===f?'active':''} onClick={()=>setGalleryFilter(f)}>{f==='All'?'All projects':f.toLowerCase()}</button>)}</div>
       <div className="lp-gallery__grid">{visibleExamples.map((item)=><article key={item.id} className="lp-gallery__card lp-reveal"><div className={`lp-gallery__thumbnail lp-gallery__thumbnail--${item.art} ${item.light?'is-light':''}`}><div className="lp-gallery__thumbnail-head"><span>PPTX.AI / CONCEPT</span><span>{item.id}</span></div><strong>{item.name}<span>.</span></strong><div className="lp-gallery__illustration" aria-hidden="true"><i/><i/><i/></div><div className="lp-gallery__thumbnail-end">A NEW PERSPECTIVE <ArrowUpRight size={18}/></div></div><div className="lp-gallery__metadata"><div><span>{item.category}</span><h3>{item.label}</h3></div><button onClick={()=>create(item.prompt,8)} aria-label={`Create a presentation inspired by ${item.name}`} title="Use this example idea in your studio"><ArrowUpRight size={21}/></button></div></article>)}</div>
-      <div className="lp-orbit lp-reveal"><div><span className="lp-tag">THE CREATIVE INDEX</span><h3>Take inspiration<br/><em>for a spin.</em></h3><p>The existing interactive wheel is still here. Open it to explore by scrolling, dragging, or using the arrow keys.</p><button className="lp-button lp-button--secondary" onClick={()=>setWheelOpen(v=>!v)}>{wheelOpen?'Close creative wheel':'Explore creative wheel'} <ArrowUpRight size={16}/></button></div>{wheelOpen?<div className="lp-orbit__wheel"><Suspense fallback={<div className="lp-wheel-loading">Loading interactive wheel…</div>}><CreativeWheel/></Suspense></div>:<div className="lp-orbit__art" aria-hidden="true"><i/><i/><i/><span>YOUR NEXT STORY AWAITS</span></div>}</div>
       </section>
 
       <section id="customize" className="lp-section lp-customize"><div className="lp-customize__copy lp-reveal"><span className="lp-tag">04 / THE FINISHING TOUCH</span><h2>The details<br/>make it <em>yours.</em></h2><p>Your presentation isn't finished until it sounds, looks, and feels like you. Switch between the real Light and Midnight themes, and edit every slide in the workspace.</p><div className="lp-theme-picker"><button className={theme==='midnight'?'selected':''} onClick={()=>setTheme('midnight')} aria-pressed={theme==='midnight'}><span className="lp-theme-chip lp-theme-chip--dark"/> Midnight</button><button className={theme==='paper'?'selected':''} onClick={()=>setTheme('paper')} aria-pressed={theme==='paper'}><span className="lp-theme-chip lp-theme-chip--light"/> Light</button></div><button className="lp-inline-link" onClick={()=>create('')}>Start designing your deck <ArrowRight size={16}/></button></div><div className="lp-customize__visual lp-reveal"><div className="lp-customize__visual-top"><span>DESIGN SYSTEM / EXAMPLE</span><Palette size={18}/></div><SampleSlide theme={theme} title="Every idea has its own voice."/><div className="lp-customize__caption"><span><CheckCircle2 size={15}/> REAL THEME OPTIONS</span><span>PREVIEW ONLY</span></div></div></section>

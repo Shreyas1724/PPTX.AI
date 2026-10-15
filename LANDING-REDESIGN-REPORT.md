@@ -9,7 +9,7 @@
 - The frontend is React 19 + TypeScript + Vite 6 with CSS, Tailwind and shadcn-style component configuration.
 - The backend is FastAPI with a PostgreSQL/SQLAlchemy data model, authenticated credit endpoints, presentation/job workflows, PowerPoint generation, version history, and a mobile control module.
 - Existing public routes: `/`, `/signup`, `/login`. Authenticated routes: `/app`, `/create`, `/credits`, `/history`, `/presentation/:id` (and mobile `/control`).
-- The original landing included a 3D visual and an interactive wheel. The wheel and its supporting files remain present and are now lazily accessible from the updated landing page.
+- The original landing included a 3D visual and an interactive wheel. The wheel and its supporting files are present. The entry-page correction below makes the wheel visible immediately on `/`.
 - The **actual backend credit defaults**, according to the existing README, are 30 credits after verification and 2 credits for generation / 1 credit for assistant edits. They differ from the newly proposed brief (200/100/10/₹29); **we did not alter or hardcode credit rules**. Signed-in users see values returned by the server's `/credits` route; unauthenticated visitors see no invented pricing.
 - Live model generation depends on `LLM_API_KEY` and other provider configuration. The redesign does not claim that research, OCR, PDF generation, image generation, or external billing are ready without setup and testing.
 
@@ -28,12 +28,12 @@ The existing backend, SQLAlchemy models, API routes, queue, mobile-control imple
 
 ## User experience
 
-1. Hero presents a scroll-safe, cinematic layered slide sculpture and a real Create CTA.
+1. The first viewport presents the interactive wheel immediately, with Create and Discover the studio actions.
 2. Navigation routes to existing `/signup`, `/login`, `/app`, `/create` or anchors within the page.
 3. The workflow teaser lets the visitor enter a topic, choose 5/8/12 slides, advance through clearly labeled visual demonstrations, and continue to the authenticated Create Studio. The selected topic and slide count carry through to the app for that session.
 4. Example presentation cards are explicitly marked **concept previews**, not working template assets. Their action opens the real creation wizard with a starter prompt.
 5. Theme preview switches between illustrative Midnight/Light variants; the real editor's theme switch remains unmodified.
-6. The existing interactive work wheel is opt-in, loaded only after clicking **Explore creative wheel**, to reduce initial render overhead.
+6. The interactive work wheel is the public entry hero; no extra click is required to reveal it.
 7. Mobile-control section describes the real pairing workflow but does not fabricate a working QR code.
 8. Credits display genuine server values only when an authenticated `/credits` request succeeds; otherwise, the interface directs visitors to the wallet.
 
@@ -41,7 +41,7 @@ The existing backend, SQLAlchemy models, API routes, queue, mobile-control imple
 
 - Original CSS artwork; no copied Scrolltide template code, images or proprietary assets.
 - Scroll reveal animations via IntersectionObserver with cleanup, CSS opacity/transform transitions, floating slide layers, an atmospheric halo, marquee, and micro-interactions.
-- No added JavaScript animation or 3D dependencies. Existing heavy wheel loads lazily when invoked.
+- No added JavaScript animation or 3D dependencies. The existing wheel loads with the entry page.
 - `prefers-reduced-motion` support and focus outlines, aria labels, accessible mobile navigation toggle, real buttons instead of dead links.
 - Responsive layout at 1240px, 970px, 760px, and 520px breakpoints, subject to device/browser QA.
 
@@ -70,3 +70,9 @@ The existing backend, SQLAlchemy models, API routes, queue, mobile-control imple
 - Newly proposed credit amounts are not effective until the backend is reconfigured and financial flows are verified.
 - Public legal/support destinations are not known and are therefore not linked.
 - This is a completed *landing code implementation*, not a claim that the entire SaaS is production-ready.
+
+## Entry-page correction — 16 October 2026
+
+The interactive wheel now mounts immediately in the first viewport on `/`, replacing the layered-slide hero and removing the gallery's opt-in wheel control. Navigation, existing studio sections, and creation callbacks remain integrated. Card activation uses the same signup/create handoff as the primary CTA. Pointer capture begins only after a real drag, and Enter/Space activate the selected card.
+
+Validation: `npm run build` and `git diff --check` passed. Focused Chromium checks at 1440×1000 and 390×844 verified immediate wheel visibility, all nine local image fallbacks, keyboard selection and activation, card click/tap, drag suppression, creation routing, the studio scroll control, and no mobile horizontal overflow or browser runtime errors. These UI checks mocked unauthenticated API responses and blocked external images to exercise the local covers; they do not validate live backend or provider integrations.
