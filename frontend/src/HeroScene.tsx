@@ -1,8 +1,0 @@
-import React,{useEffect,useRef,useState}from'react';
-import{Canvas,useFrame}from'@react-three/fiber';
-import{Float,RoundedBox}from'@react-three/drei';
-import{Group}from'three';
-function Orbit(){const ref=useRef<Group>(null);useFrame(state=>{if(ref.current){ref.current.rotation.y=state.clock.elapsedTime*.14;ref.current.rotation.x=Math.sin(state.clock.elapsedTime*.3)*.08}});return <group ref={ref}>{[0,1,2,3,4].map(n=><Float key={n} speed={1.2+n*.12} floatIntensity={.3}><RoundedBox args={[3.1,1.82,.09]} radius={.06} smoothness={4} position={[n*.31-1,n*.13-.3,-n*.55]} rotation={[.06,-.24,.08]}><meshPhysicalMaterial color={n===0?'#8168ff':n%2?'#252e54':'#e9e7ff'} metalness={.25} roughness={.25}/></RoundedBox></Float>)}</group>}
-function Fallback(){return <div className="sceneFallback" aria-hidden="true"><div/><div/><div><span>PPTX.AI</span><strong>Ideas in<br/>motion.</strong></div></div>}
-class Boundary extends React.Component<{children:React.ReactNode},{failed:boolean}>{state={failed:false};static getDerivedStateFromError(){return{failed:true}}render(){return this.state.failed?<Fallback/>:this.props.children}}
-export default function HeroScene(){const[reduced,setReduced]=useState(window.matchMedia('(prefers-reduced-motion: reduce)').matches);useEffect(()=>{const media=window.matchMedia('(prefers-reduced-motion: reduce)');const change=()=>setReduced(media.matches);media.addEventListener('change',change);return()=>media.removeEventListener('change',change)},[]);return <div className="hero3d"><Boundary>{reduced?<Fallback/>:<Canvas fallback={<Fallback/>} camera={{position:[0,0,7],fov:42}} dpr={[1,1.5]} gl={{antialias:true}}><ambientLight intensity={2}/><pointLight position={[5,4,5]} intensity={30} color="#c4adff"/><Orbit/></Canvas>}</Boundary></div>}

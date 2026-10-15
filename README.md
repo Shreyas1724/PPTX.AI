@@ -24,7 +24,8 @@ The workspace includes search, starter prompts, recent activity, and real credit
 
 - `frontend/src/Workspace.tsx`, `CreateStudio.tsx`, `WalletPage.tsx`: workspace, creation review, and credit wallet.
 - `frontend/src/AuthPage.tsx`, `HistoryPage.tsx`: verified registration, Google sign-in, and activity history.
-- `frontend/src/HeroScene.tsx`: lazy-loaded interactive 3D with reduced-motion/static fallbacks.
+- `frontend/src/EntryPage.tsx`, `appearance.tsx`: interactive eight-theme ring and persistent screen appearance.
+- `frontend/src/FluxoraHome.tsx`, `fluxora/`: signed-in Fluxora video hero, feature navigation, and presentation library.
 - `backend/app/auth.py`: Google identity verification, dual OTP onboarding, rate limits, secure sessions.
 - `backend/app/credits.py`: atomic reservations, idempotency fingerprints, refunds, and wallet aggregation.
 - `backend/app/worker.py`: durable database queue, atomic claims, fenced commits, timeouts, and recovery.
@@ -80,6 +81,10 @@ Production document parsing is designed for the supplied Linux container. The pa
 ## Validation
 
 The latest error audit includes strict TypeScript/production builds, Python tests with warnings treated as errors, dependency audits, and container/browser integration checks. Details, repaired failure cases, repeatable commands, and verification limits are recorded in [docs/ERROR-AUDIT.md](docs/ERROR-AUDIT.md).
+
+## Local demo account
+
+For a real password login without configuring OTP delivery, follow [the isolated local demo setup](docs/LOCAL-DEMO.md). The operator command creates a local SQLite test account and prints a random password once; no shared credentials are built into the application.
 
 ## External services and remaining scope
 

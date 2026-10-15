@@ -76,3 +76,43 @@ The existing backend, SQLAlchemy models, API routes, queue, mobile-control imple
 The interactive wheel now mounts immediately in the first viewport on `/`, replacing the layered-slide hero and removing the gallery's opt-in wheel control. Navigation, existing studio sections, and creation callbacks remain integrated. Card activation uses the same signup/create handoff as the primary CTA. Pointer capture begins only after a real drag, and Enter/Space activate the selected card.
 
 Validation: `npm run build` and `git diff --check` passed. Focused Chromium checks at 1440×1000 and 390×844 verified immediate wheel visibility, all nine local image fallbacks, keyboard selection and activation, card click/tap, drag suppression, creation routing, the studio scroll control, and no mobile horizontal overflow or browser runtime errors. These UI checks mocked unauthenticated API responses and blocked external images to exercise the local covers; they do not validate live backend or provider integrations.
+
+## Eight-theme entry and signed-in Fluxora home — 16 October 2026
+
+The public `/` route now renders `EntryPage`: the interactive ring contains eight
+selectable worlds (Nature, Ocean, Space, Sunset, Aurora, Minimal, Cyberpunk and
+Rose). Selecting a ring card, ring title, swatch or appearance option applies the
+background, foreground, accent, button and panel tokens. The choice persists in
+local storage and synchronizes across tabs. Each theme has a bundled scenic JPG
+and a local SVG fallback; entry images make no third-party image requests.
+
+Successful signup or login now opens `/app`, which renders `FluxoraHome`. Its hero
+uses the source supplied in the user's Fluxora prompt: local looping visor video,
+asymmetric scrim, Inter Tight / Inter / Instrument Serif typography, transparent
+navigation, glass statistics and staggered CSS entrances. Component classes and
+tokens are scoped to preserve the surrounding application. The supplied template's
+brand/copy and placeholder figures were adapted to PPTX.AI, real deck counts and
+server credit balances. Feature buttons open Create, Projects, History and Credits;
+My decks scrolls to the searchable existing presentation library. Mobile control,
+export, editing and versions remain accessible through existing presentations.
+
+The eight selected palettes also carry into the signed-in home, with corresponding
+video colour treatment. Reduced-motion viewers get a paused video and immediate
+content. The eight theme JPGs were downloaded from Unsplash; the 10.6 MB hero video
+was downloaded from the URL in the supplied prompt and is served as `/hero-loop.mp4`.
+The app does not hotlink that video. Google Fonts still requires network access,
+with system/Georgia fallbacks available.
+
+Validation: TypeScript and Vite production build passed. The browser check in
+`frontend/tests/appearance-regression.cjs` verifies all eight entry background and
+primary button colours, persistence, ring selection, login-to-home routing, local
+video decoding/playback, credit display, Create navigation, presentation search,
+390px mobile and 768px tablet layouts, mobile menu dismissal and reduced motion.
+Account API responses are mocked; this does not verify live authentication,
+provider calls, billing or generation. No deployment was performed.
+
+Cleanup before publishing removed the superseded landing page, unused wheel demo,
+unused Three.js hero, and 61 dependency packages. Duplicate ignored node_modules
+under the old nested project directory were also removed. Theme colour tokens and
+Minimal-theme editor contrast were corrected. Local demo provisioning is explicit
+and documented in `docs/LOCAL-DEMO.md`; no demo password is committed.
