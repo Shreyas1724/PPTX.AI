@@ -9,6 +9,7 @@ from app import core, main, auth
 
 def test_pairing_exchange_and_command(monkeypatch):
  engine=create_engine('sqlite://',connect_args={'check_same_thread':False},poolclass=StaticPool); core.Session.configure(bind=engine); main.ENGINE=engine
+ with engine.connect() as connection:connection.exec_driver_sql('PRAGMA foreign_keys=ON')
  for n in ['SMTP_HOST','SMTP_FROM','TWILIO_ACCOUNT_SID','TWILIO_AUTH_TOKEN','TWILIO_FROM']: monkeypatch.setenv(n,'test')
  codes={}; monkeypatch.setattr(auth,'deliver',lambda ch,dest,code: codes.update({(ch,dest):code}))
  class C(TestClient):

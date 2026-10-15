@@ -3,7 +3,7 @@ import asyncio, hashlib, json, os, secrets, time
 from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, Request, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel, Field
-from sqlalchemy import select
+from sqlalchemy import select,update
 from sqlalchemy.orm import Session
 from .core import Session as DBSession, User, Project, Presentation, ControlSession, PairingInvitation, ControllerDevice, ControlCommand, ControlAuditEvent
 from .auth import current, db
@@ -11,6 +11,7 @@ from .auth import current, db
 router=APIRouter(prefix='/api/v1/presentation-control',tags=['Presentation control'])
 FRONTEND=os.getenv('FRONTEND_URL',os.getenv('CORS_ORIGINS','http://localhost:3000').split(',')[0].strip()).rstrip('/')
 SESSION_TTL=int(os.getenv('CONTROL_SESSION_TTL','7200')); INVITE_TTL=int(os.getenv('CONTROL_PAIRING_TTL','120'))
+controller_connections:dict[str,set[WebSocket]]={}
 connections:dict[str,set[WebSocket]]={}; host_connections:dict[str,WebSocket]={}; locks:dict[str,asyncio.Lock]={}
 def ts(): return int(time.time())
 def digest(v:str): return hashlib.sha256(v.encode()).hexdigest()
@@ -42,7 +43,9 @@ def invitation(s,row):
 def create(data:CreateSession,user:User=Depends(current),s:Session=Depends(db)):
  p=s.get(Presentation,data.presentation_id); project=s.get(Project,p.project_id) if p else None
  if not p or not project or project.owner_id!=user.id: raise HTTPException(404,'Presentation not found')
- count=len(json.loads(p.slides or '[]')); row=ControlSession(presentation_id=p.id,owner_user_id=user.id,total_slides=count,current_slide_index=0,expires_at=ts()+SESSION_TTL,last_activity_at=ts()); s.add(row); s.commit(); s.refresh(row)
+ count=len(json.loads(p.slides or '[]'))
+ if not count:raise HTTPException(409,'Add slides before starting mobile control.')
+ row=ControlSession(presentation_id=p.id,owner_user_id=user.id,total_slides=count,current_slide_index=0,expires_at=ts()+SESSION_TTL,last_activity_at=ts()); s.add(row); s.commit(); s.refresh(row)
  result=invitation(s,row); audit(s,row.id,'SESSION_CREATED',user.id,{'presentation_id':p.id}); s.commit()
  return {'session_id':row.id,'status':row.status,'total_slides':count,'current_slide_index':0,**result}
 
@@ -55,9 +58,15 @@ def regenerate_alias(sid:str,user:User=Depends(current),s:Session=Depends(db)): 
 def exchange(data:Pairing,s:Session=Depends(db)):
  inv=s.scalar(select(PairingInvitation).where(PairingInvitation.token_hash==digest(data.token)).with_for_update())
  if not inv or inv.used_at or inv.revoked_at or inv.expires_at<=ts(): raise HTTPException(410,'This pairing invitation is invalid or expired')
- row=s.get(ControlSession,inv.session_id)
- if not row or row.status in ('ended','expired') or row.expires_at<=ts(): raise HTTPException(410,'Control session is no longer active')
- inv.used_at=ts(); raw='ct_'+secrets.token_urlsafe(32); device=ControllerDevice(session_id=row.id,label=data.device_label.strip(),token_hash=digest(raw),last_seen_at=ts()); s.add(device); row.status='connected'; row.last_activity_at=ts(); audit(s,row.id,'DEVICE_PAIRED',None,{'device_label':device.label}); s.commit()
+ claimed=s.execute(update(PairingInvitation).where(PairingInvitation.id==inv.id,
+  PairingInvitation.used_at.is_(None),PairingInvitation.revoked_at.is_(None),PairingInvitation.expires_at>ts()
+ ).values(used_at=ts()),execution_options={'synchronize_session':False})
+ if not claimed.rowcount:
+  s.rollback();raise HTTPException(410,'This pairing invitation is invalid or expired')
+ row=s.scalar(select(ControlSession).where(ControlSession.id==inv.session_id).with_for_update().execution_options(populate_existing=True))
+ if not row or row.status in ('ended','expired') or row.expires_at<=ts():
+  s.rollback();raise HTTPException(410,'Control session is no longer active')
+ raw='ct_'+secrets.token_urlsafe(32); device=ControllerDevice(session_id=row.id,label=data.device_label.strip(),token_hash=digest(raw),last_seen_at=ts()); s.add(device); row.status='connected'; row.last_activity_at=ts(); audit(s,row.id,'DEVICE_PAIRED',None,{'device_label':device.label}); s.commit()
  return {'controller_token':raw,'device_id':device.id,'session_id':row.id,'total_slides':row.total_slides,'current_slide_index':row.current_slide_index,'expires_at':row.expires_at}
 
 @router.get('/sessions/{sid}')
@@ -67,13 +76,21 @@ def state(sid:str,user:User=Depends(current),s:Session=Depends(db)):
 @router.get('/sessions/{sid}/state')
 def state_alias(sid:str,user:User=Depends(current),s:Session=Depends(db)): return state(sid,user,s)
 @router.post('/sessions/{sid}/revoke/{device_id}')
-def revoke(sid:str,device_id:str,user:User=Depends(current),s:Session=Depends(db)):
+async def revoke(sid:str,device_id:str,user:User=Depends(current),s:Session=Depends(db)):
  row=owner(s,sid,user); d=s.scalar(select(ControllerDevice).where(ControllerDevice.id==device_id,ControllerDevice.session_id==sid))
  if not d: raise HTTPException(404,'Device not found')
- d.revoked_at=ts(); audit(s,sid,'DEVICE_REVOKED',user.id,{'device_id':device_id}); s.commit(); return {'ok':True}
+ d.revoked_at=ts(); audit(s,sid,'DEVICE_REVOKED',user.id,{'device_id':device_id}); s.commit()
+ for socket in list(controller_connections.get(device_id,set())):
+  try:await socket.close(code=4403)
+  except (RuntimeError,WebSocketDisconnect):pass
+ return {'ok':True}
 @router.post('/sessions/{sid}/end')
 async def end(sid:str,user:User=Depends(current),s:Session=Depends(db)):
- row=owner(s,sid,user); row.status='ended'; row.ended_at=ts(); audit(s,sid,'SESSION_ENDED',user.id); s.commit(); await broadcast(sid,{'type':'SESSION_ENDED'}); return {'ok':True}
+ row=owner(s,sid,user); row.status='ended'; row.ended_at=ts(); audit(s,sid,'SESSION_ENDED',user.id); s.commit(); await broadcast(sid,{'type':'SESSION_ENDED'})
+ for socket in list(connections.get(sid,set())):
+  try:await socket.close(code=1000)
+  except (RuntimeError,WebSocketDisconnect):pass
+ return {'ok':True}
 
 def device_for(s,token):
  d=s.scalar(select(ControllerDevice).where(ControllerDevice.token_hash==digest(token),ControllerDevice.revoked_at.is_(None)))
@@ -107,7 +124,7 @@ def cookie_owner(ws,s):
 
 @router.websocket('/ws/{sid}')
 async def websocket(ws:WebSocket,sid:str,role:str='controller',token:str=''):
- await ws.accept(); s=DBSession(); row=s.get(ControlSession,sid)
+ await ws.accept(); s=DBSession(); row=s.get(ControlSession,sid); device=None
  try:
   if not row or row.expires_at<=ts() or row.status in ('ended','expired'): await ws.close(code=4404); return
   device=None
@@ -118,21 +135,47 @@ async def websocket(ws:WebSocket,sid:str,role:str='controller',token:str=''):
   else:
    device=s.scalar(select(ControllerDevice).where(ControllerDevice.token_hash==digest(token),ControllerDevice.session_id==sid,ControllerDevice.revoked_at.is_(None)))
    if not device: await ws.close(code=4403); return
+  if device:controller_connections.setdefault(device.id,set()).add(ws)
   connections.setdefault(sid,set()).add(ws); s.commit(); await ws.send_json({'type':'SESSION_STATE','session_id':sid,'current_slide_index':row.current_slide_index,'total_slides':row.total_slides,'status':row.status})
   if role=='host': await broadcast(sid,{'type':'HOST_CONNECTED'})
   async for message in ws.iter_json():
+   row=s.get(ControlSession,sid,populate_existing=True)
+   if not row:
+    await ws.close(code=4404); break
+   if row.expires_at<=ts() or row.status in ('ended','expired'):
+    await ws.send_json({'type':'SESSION_ENDED'}); await ws.close(code=4404); break
+   if device:
+    device=s.get(ControllerDevice,device.id,populate_existing=True)
+    if not device or device.revoked_at:
+     await ws.close(code=4403); break
+   if not isinstance(message,dict):
+    await ws.send_json({'type':'ERROR','error':'Control messages must be objects.'}); continue
    kind=message.get('type')
    if kind=='HOST_STATE' and role=='host':
-    idx=int(message.get('slide_index',0));
-    if 0<=idx<row.total_slides: row.current_slide_index=idx; row.last_activity_at=ts(); s.commit(); await broadcast(sid,{'type':'SLIDE_STATE_CHANGED','slide_index':idx,'source':'host'})
+    idx=message.get('slide_index',0)
+    if not isinstance(idx,int) or isinstance(idx,bool):
+     await ws.send_json({'type':'ERROR','error':'Slide index must be an integer.'}); continue
+    deck=s.get(Presentation,row.presentation_id,populate_existing=True)
+    row.total_slides=len(json.loads(deck.slides or '[]')) if deck else 0
+    if 0<=idx<row.total_slides:
+     row.current_slide_index=idx; row.last_activity_at=ts(); s.commit(); await broadcast(sid,{'type':'SLIDE_STATE_CHANGED','slide_index':idx,'total_slides':row.total_slides,'source':'host'})
    elif kind=='COMMAND_RESULT' and role=='host':
+    if not isinstance(message.get('request_id'),str) or not 8<=len(message['request_id'])<=100:
+     await ws.send_json({'type':'ERROR','error':'Command request ID must be a bounded string.'}); continue
     c=s.scalar(select(ControlCommand).where(ControlCommand.session_id==sid,ControlCommand.request_id==message.get('request_id')))
     if c:
      c.status='completed' if message.get('ok') else 'failed'; c.result=json.dumps({'slide_index':message.get('slide_index'),'error':message.get('error')});
-     if message.get('ok') and isinstance(message.get('slide_index'),int): row.current_slide_index=int(message['slide_index'])
+     idx=message.get('slide_index')
+     if message.get('ok') and isinstance(idx,int) and not isinstance(idx,bool) and 0<=idx<row.total_slides:row.current_slide_index=idx
      s.commit(); await broadcast(sid,{'type':'COMMAND_RESULT','request_id':c.request_id,'ok':c.status=='completed','slide_index':row.current_slide_index,'error':message.get('error')})
    elif kind=='PING': await ws.send_json({'type':'PONG','at':ts()})
+ except (ValueError,TypeError):
+  await ws.close(code=1003)
  finally:
   connections.get(sid,set()).discard(ws)
+  if not connections.get(sid):connections.pop(sid,None);locks.pop(sid,None)
+  if device:
+   controller_connections.get(device.id,set()).discard(ws)
+   if not controller_connections.get(device.id):controller_connections.pop(device.id,None)
   if host_connections.get(sid) is ws: host_connections.pop(sid,None)
   s.close()

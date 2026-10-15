@@ -14,7 +14,8 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements-lock.txt
-      - run: python -m pytest -q
+      - run: pip check
+      - run: python -m pytest -q -W error
   frontend:
     runs-on: ubuntu-latest
     defaults:

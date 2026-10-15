@@ -79,13 +79,16 @@ def base(deck,i,n,slide,theme):
 def heading(sl,slide,th,title_size=31):
     label(sl,slide.title,.78,.73,11.83,.85,th,pt=title_size,weight=True)
     if slide.subtitle:label(sl,slide.subtitle,.82,1.58,11.3,.42,th,pt=15,color='secondary')
-    if slide.key_message:
+    if slide.key_message and not (slide.layout=='chart' and slide.chart or slide.layout=='kpi' and slide.metrics):
         label(sl,slide.key_message,.82,6.40,11.4,.35,th,pt=12,color='accent')
 
 def card(sl,th,x,y,w,h,index,title,desc='',tint=False):
     rect(sl,x,y,w,h,th,'panel_alt' if tint else 'panel',radius=True)
     label(sl,f'{index:02d}' if isinstance(index,int) else index,x+.24,y+.23,.55,.32,th,13,True,'accent')
-    label(sl,title,x+.25,y+.67,w-.5,min(.85,h*.34),th,21 if len(title)<66 else 16,True)
+    title_top=.67 if h>1.4 else .60
+    title_height=min(.85,h*.34) if desc else max(.3,h-title_top-.16)
+    title_size=(21 if len(title)<66 else 16) if h>1.65 else (17 if h>1.4 else 14)
+    label(sl,title,x+.25,y+title_top,w-.5,title_height,th,title_size,True)
     if desc and h>1.65:label(sl,desc,x+.25,y+1.55,w-.5,h-1.70,th,14,color='secondary',vertical=MSO_ANCHOR.TOP)
 
 def native_chart(sl,spec,th):
@@ -114,7 +117,7 @@ def native_chart(sl,spec,th):
         if chart.kind=='bar':plot.series[0].format.fill.solid();plot.series[0].format.fill.fore_color.rgb=th.color('accent')
         if chart.kind=='line':plot.series[0].format.line.color.rgb=th.color('accent')
     except (AttributeError,IndexError):pass
-    if chart.unit:label(sl,f'UNIT  {chart.unit}',10,1.73,2.25,.3,th,11,color='secondary',align=PP_ALIGN.RIGHT)
+    if chart.unit:label(sl,f'UNIT  {chart.unit}',10,1.73,2.25,.3,th,12,color='secondary',align=PP_ALIGN.RIGHT)
 
 def connect(sl,x1,y1,x2,y2,th):
     line=sl.shapes.add_connector(MSO_CONNECTOR.STRAIGHT,Inches(x1),Inches(y1),Inches(x2),Inches(y2))
@@ -172,7 +175,8 @@ def render_spec(sl,spec,i,n,th):
     heading(sl,spec,th)
     if mode=='chart' and spec.chart:
         native_chart(sl,spec,th)
-        if body:label(sl,'INSIGHT  '+body[0],.95,6.42,11.25,.34,th,12,color='accent')
+        insight=spec.key_message or (body[0] if body else '')
+        if insight:label(sl,'INSIGHT  '+insight,.95,6.42,11.25,.34,th,12,color='accent')
         return
     if mode=='kpi' and spec.metrics:
         num=len(spec.metrics);cw=11.68/num-.20
@@ -182,7 +186,8 @@ def render_spec(sl,spec,i,n,th):
             label(sl,m.value,x+.21,2.66,cw-.43,.95,th,34 if len(m.value)<12 else 26,True,'accent')
             label(sl,m.label,x+.21,3.77,cw-.43,.67,th,17,True)
             if m.context:label(sl,m.context,x+.21,4.53,cw-.42,.76,th,12,color='secondary')
-        if body:label(sl,body[0],.91,6.36,11.17,.42,th,12,color='accent')
+        insight=spec.key_message or (body[0] if body else '')
+        if insight:label(sl,insight,.91,6.36,11.17,.42,th,12,color='accent')
         return
     if mode in ('process','timeline','architecture','methodology','roadmap'):
         items=spec.steps or body
@@ -229,9 +234,11 @@ def build_deck(title:str,slides:list[dict],theme:str='midnight'):
         # Preserve supporting content that cannot fit visibly in a visual-led layout.
         # The body and any source references stay in the stored slide JSON too.
         notes=[spec.notes] if spec.notes else []
-        if spec.chart and spec.body[1:]:notes.append('Additional context:\n'+'\n'.join(spec.body[1:]))
-        if spec.metrics and spec.body[1:]:notes.append('Additional context:\n'+'\n'.join(spec.body[1:]))
+        if spec.chart or spec.metrics:
+            supporting=spec.body if spec.key_message else spec.body[1:]
+            if supporting:notes.append('Additional context:\n'+'\n'.join(supporting))
         if spec.steps and spec.body:notes.append('Supporting content:\n'+'\n'.join(spec.body))
+        if spec.sources:notes.append('Sources:\n'+'\n'.join(spec.sources))
         if notes:sl.notes_slide.notes_text_frame.text='\n\n'.join(notes)
     return deck,checked
 

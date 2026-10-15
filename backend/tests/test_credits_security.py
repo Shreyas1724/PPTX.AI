@@ -120,6 +120,20 @@ def test_unpaid_or_mismatched_payments_never_credit(setup):
   with pytest.raises(HTTPException):billing.fulfill(s,event)
   assert s.get(core.User,user['id']).credits==30
 
+@pytest.mark.parametrize('event',[
+ [],None,{'type':'checkout.session.completed','data':None},
+ {'type':'checkout.session.completed','data':{'object':None}},
+ {'type':'checkout.session.completed','data':{'object':{'payment_status':'paid','metadata':None}}},
+ {'type':'checkout.session.completed','data':{'object':{'payment_status':'paid','metadata':{'order_id':{}}}}},
+])
+def test_malformed_signed_webhooks_return_validation_errors(setup,monkeypatch,event):
+ c,codes=setup;signup(c,codes);monkeypatch.setenv('STRIPE_WEBHOOK_SECRET','whsec_test')
+ raw=json.dumps(event).encode();stamp=str(int(time.time()))
+ signature=hmac.new(b'whsec_test',stamp.encode()+b'.'+raw,hashlib.sha256).hexdigest()
+ response=c.post('/api/v1/billing/webhook',content=raw,headers={'stripe-signature':f't={stamp},v1={signature}'})
+ assert response.status_code==400,response.text
+ assert c.get('/api/v1/credits').json()['balance']==30
+
 def test_document_boundaries():
  from app.documents import parse,extract,DocumentError
  assert parse(b'A useful reference','txt')=='A useful reference'

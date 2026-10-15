@@ -16,7 +16,12 @@ def process(job_id):
   if not op:return
   claimed=session.execute(update(Operation).where(Operation.id==op.id,Operation.state=='reserved').values(state='running',lease_until=int(time.time())+LEASE_SECONDS))
   if not claimed.rowcount:session.rollback();return
-  job=session.get(Job,job_id);job.status='running';job.stage='retrieving';session.commit()
+  job=session.get(Job,job_id)
+  if not job:
+   message='The job no longer exists. Reserved credits were refunded.'
+   if refund(session,op.id,message):record(session,op.user_id,op.kind+'.failed',message,status='failed')
+   session.commit();return
+  job.status='running';job.stage='retrieving';session.commit()
   op_id=op.id
  try:
   with Session() as session:

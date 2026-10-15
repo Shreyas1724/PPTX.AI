@@ -53,7 +53,7 @@ Backend (Python 3.12, matching Docker and CI):
 
 ```sh
 cd backend
-python -m venv .venv
+python3.12 -m venv .venv
 # Activate .venv using the command appropriate to your shell.
 pip install -r requirements-lock.txt
 uvicorn app.main:app --reload
@@ -61,10 +61,10 @@ uvicorn app.main:app --reload
 python -m app.worker
 # Also run hourly retention/recovery maintenance:
 python -m app.activity
-python -m pytest -q
+python -m pytest -q -W error
 ```
 
-For the browser UI, keep `/api` proxied through the same origin. Set CORS_ORIGINS to the Vite origin (default development command uses port 5173). Docker uses port 3000.
+For the browser UI, keep `/api` proxied through the same origin. Set `CORS_ORIGINS` and `FRONTEND_URL` to the Vite origin (development uses port 5173; `npm run preview` uses port 4173). Use an origin reachable from your phone for mobile pairing. Docker uses port 3000.
 
 Frontend:
 
@@ -79,15 +79,13 @@ Production document parsing is designed for the supplied Linux container. The pa
 
 ## Validation
 
-Validated after integrating the supplied source into the repository root: **36 backend tests passed** on Python 3.12; the frontend TypeScript check and Vite production build passed; `docker compose config --quiet` passed. The backend test run reports one dependency deprecation warning about Starlette's httpx test adapter. The frontend dependency audit reports **0 vulnerabilities** after upgrading Tailwind to v4 with its PostCSS plugin. Docker build contexts exclude local dependencies and generated files.
-
-The tests use mocked external services and SQLite. This validation did not run a browser end-to-end check, the full Docker/PostgreSQL stack, live LLM calls, or a live paid transaction. Earlier preview images and implementation reports describe their original validation environments.
+The latest error audit includes strict TypeScript/production builds, Python tests with warnings treated as errors, dependency audits, and container/browser integration checks. Details, repaired failure cases, repeatable commands, and verification limits are recorded in [docs/ERROR-AUDIT.md](docs/ERROR-AUDIT.md).
 
 ## External services and remaining scope
 
-Live LLM, Google login, OTP delivery, and Stripe payments need your credentials and provider-side setup. Tests use mocks for external identity/payment delivery and local outline generation for the browser end-to-end test. This environment did not run the full Docker/PostgreSQL stack or a live paid transaction.
+Live LLM, Google login, OTP delivery, and Stripe payments need your credentials and provider-side setup. Tests use mocks for external identity/payment delivery and local outline generation for the browser end-to-end test. The local audit exercises Docker/PostgreSQL with isolated fixtures; live provider integrations and paid transactions still need provider-side verification.
 
-Advanced visual PowerPoint QA, PDF export, image generation, cloud object storage, OCR, team collaboration, subscriptions, automatic payment refund/dispute reconciliation, and web research remain outside this release. The assistant can rewrite, translate, or combine slide edits when an LLM is configured, but it does not execute arbitrary tools or claim unsupported chart/image creation.
+Advanced visual PowerPoint QA, PDF export, image generation, cloud object storage, OCR, team collaboration, subscriptions, automatic payment refund/dispute reconciliation, and web research remain outside this release. The assistant can rewrite, translate, or combine slide edits when an LLM is configured, but it does not execute arbitrary tools, invent chart data, or generate image assets.
 
 ## Projects Studio extension
 

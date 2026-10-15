@@ -1,1 +1,34 @@
-{"name":"pptx-ai-frontend","version":"1.0.0","private":true,"scripts":{"dev":"vite --host 0.0.0.0","build":"tsc -b && vite build","preview":"vite --host 0.0.0.0"},"dependencies":{"@react-three/drei":"^10.0.6","@react-three/fiber":"^9.1.2","@vitejs/plugin-react":"^4.4.1","clsx":"^2.1.1","lucide-react":"^0.468.0","react":"^19.0.0","react-dom":"^19.0.0","tailwind-merge":"^3.7.0","three":"^0.175.0","typescript":"^5.8.3","vite":"^6.2.6"},"devDependencies":{"@tailwindcss/postcss":"^4.3.3","@types/react":"^19.0.0","@types/react-dom":"^19.0.0","@types/three":"^0.175.0","autoprefixer":"^10.6.1","postcss":"^8.5.29","tailwindcss":"^4.3.3"}}
+{
+  "name": "pptx-ai-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test:browser": "node tests/browser-regression.cjs"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.0.6",
+    "@react-three/fiber": "^9.1.2",
+    "@vitejs/plugin-react": "^4.4.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^3.7.0",
+    "three": "^0.175.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.2.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@types/three": "^0.175.0",
+    "autoprefixer": "^10.6.1",
+    "playwright": "^1.64.1",
+    "postcss": "^8.5.29",
+    "tailwindcss": "^4.3.3"
+  }
+}

@@ -1,5 +1,6 @@
 """Parse untrusted documents in a resource-limited subprocess on Linux."""
 import io,sys,json,zipfile,subprocess
+from pathlib import Path
 class DocumentError(Exception):pass
 
 def extract(raw,extension):
@@ -29,7 +30,9 @@ def extract(raw,extension):
 def parse(raw,extension):
  if extension not in ('txt','md','csv','pdf','docx'):raise DocumentError('Unsupported document type')
  try:
-  result=subprocess.run([sys.executable,'-m','app.documents',extension],input=raw,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=12,check=False)
+  # Invoke the standalone parser by its absolute path so uploads also work when
+  # the API is started outside the backend directory.
+  result=subprocess.run([sys.executable,str(Path(__file__).resolve()),extension],input=raw,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,timeout=12,check=False)
   if result.returncode!=0:raise DocumentError('Document could not be read within safety limits')
   data=json.loads(result.stdout)
   if 'error' in data:raise DocumentError(data['error'])

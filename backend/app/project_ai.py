@@ -27,6 +27,21 @@ class SingleSection(BaseModel):
 
 
 REQUIRED_SECTIONS = ('overview','analysis','requirements','innovations','architecture','roadmap','validation')
+
+
+def validate_section(section, content):
+    """Validate the structures used by project actions while keeping fields editable."""
+    wants_list=section in ('requirements','innovations','roadmap')
+    if not isinstance(content,list if wants_list else dict):
+        raise ValueError('This section requires '+('an array' if wants_list else 'an object'))
+    if wants_list and any(not isinstance(item,dict) for item in content):
+        raise ValueError('Section items must be objects.')
+    if section=='roadmap':
+        for phase in content:
+            tasks=phase.get('tasks',[])
+            if not isinstance(tasks,list) or any(not isinstance(task,dict) for task in tasks):
+                raise ValueError('Roadmap tasks must be an array of objects.')
+
 # Each key's data model is intentionally document-like: domain-specific hardware
 # and research projects require different schemas from software startups.
 CONTRACT = '''Generate a practical EDITABLE project blueprint, not marketing copy.
@@ -93,6 +108,10 @@ def analyze(idea, constraints, existing, documents, section=None):
     else:
         generated,usage=llm(CONTRACT,inputs,StructuredReport)
         data=generated.model_dump()
+    try:
+        for name,content in data.items():validate_section(name,content)
+    except ValueError as exc:
+        raise AIError('The AI returned an invalid project section: '+str(exc)) from exc
     data['research']={'state':research_state,'sources':research,
                       'disclaimer':'Search snippets are not proof of originality; verify primary sources manually.'}
     return data,usage

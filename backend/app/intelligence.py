@@ -51,7 +51,7 @@ def llm(system,user,schema,count=None):
    if attempt==2:raise AIError('AI provider timed out. Credits were refunded.')
   except httpx.HTTPStatusError:raise AIError('AI provider rejected the request. Check provider configuration.')
   except AIError:raise
-  except (ValueError,KeyError,TypeError):
+  except (ValueError,KeyError,TypeError,IndexError,AttributeError):
    if attempt==2:raise AIError('AI output did not pass validation. Credits were refunded.')
    payload['messages'].append({'role':'user','content':'Your previous response failed schema validation. Regenerate within the exact schema and requested slide count. Do not add extra fields.'})
  raise AIError('AI generation failed.')

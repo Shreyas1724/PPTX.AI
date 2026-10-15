@@ -10,6 +10,7 @@ from pathlib import Path
 from pptx import Presentation
 from pptx.util import Pt
 from pydantic import ValidationError
+from pypdf.errors import PyPdfError
 from .engine import build_deck
 
 
@@ -35,10 +36,16 @@ def audit_pptx(data: bytes, *, verify_external: bool=False) -> dict:
             text=sh.text
             for paragraph in tf.paragraphs:
                 if not paragraph.text.strip():continue
-                fs=next((r.font.size.pt for r in paragraph.runs if r.font.size), 18.0)
+                # Most generated labels set their size on the paragraph. Runs
+                # inherit it; treating those runs as 18 pt hides small text and
+                # measures headings with the wrong dimensions.
+                inherited=paragraph.font.size.pt if paragraph.font.size else 18.0
+                sizes=[r.font.size.pt if r.font.size else inherited for r in paragraph.runs if r.text]
+                fs=max(sizes,default=inherited)
                 is_metadata=y<.5 or y>6.86
-                if fs<12 and not is_metadata:
-                    issues.append({'code':'small_font','severity':'warning','element':j,'detail':f'{fs:g} pt may be small for projection.'})
+                smallest=min(sizes,default=inherited)
+                if smallest<12 and not is_metadata:
+                    issues.append({'code':'small_font','severity':'warning','element':j,'detail':f'{smallest:g} pt may be small for projection.'})
                 inner_w=max(.20,w-(tf.margin_left+tf.margin_right)/914400)
                 inner_h=max(.12,h-(tf.margin_top+tf.margin_bottom)/914400)
                 # Width model errs on warning rather than claiming a definitive clip.
@@ -59,7 +66,7 @@ def audit_pptx(data: bytes, *, verify_external: bool=False) -> dict:
     # Subscores intentionally NOT masquerading as aesthetic or factual validation.
     geometry_score=max(0,100-35*critical-3*warning)
     return {
-        'status':'failed' if critical else 'warnings' if warning else 'structurally_valid',
+        'status':'failed' if critical or external['status']=='failed' else 'warnings' if warning else 'structurally_valid',
         'validation_type':'deterministic geometry + heuristic text-size estimates',
         'slide_count':len(deck.slides), 'shape_count':total_shapes,
         'editable_shape_count':editable,'editable_shape_ratio':round(editable/max(total_shapes,1),3),
@@ -86,7 +93,7 @@ def verify_render(data:bytes, expected_pages:int) -> dict:
             pages=len(PdfReader(str(target)).pages)
             return {'status':'passed' if pages==expected_pages else 'failed','pages':pages,
                 'detail':f'Independent conversion produced {pages} of {expected_pages} expected pages.'}
-        except (OSError,subprocess.TimeoutExpired,ValueError) as exc:
+        except (OSError,subprocess.TimeoutExpired,ValueError,PyPdfError) as exc:
             return {'status':'failed','pages':None,'detail':type(exc).__name__}
 
 def audit_slides(title:str,slides:list[dict],theme:str='midnight',verify_external:bool=False)->dict:

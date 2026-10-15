@@ -46,7 +46,13 @@ def refund(session,op_id,reason='Operation failed'):
  return True
 
 def wallet(session,user_id):
+ from .project_models import ProjectAnalysisJob
  balance=session.scalar(select(User.credits).where(User.id==user_id))
  reserved=session.scalar(select(func.coalesce(func.sum(Operation.cost),0)).where(Operation.user_id==user_id,Operation.state.in_(['reserved','running'])))
  spent=session.scalar(select(func.coalesce(func.sum(Operation.cost),0)).where(Operation.user_id==user_id,Operation.state=='settled'))
+ analysis_reserved=session.scalar(select(func.coalesce(func.sum(ProjectAnalysisJob.cost),0)).where(ProjectAnalysisJob.owner_id==user_id,ProjectAnalysisJob.status.in_(['queued','running'])))
+ analysis_debits=-session.scalar(select(func.coalesce(func.sum(CreditEvent.amount),0)).where(CreditEvent.user_id==user_id,CreditEvent.reason.in_(['project_analysis:reserve','project_analysis:refund'])))
+ reserved+=analysis_reserved
+ # The ledger survives project deletion, preserving historical spending.
+ spent+=analysis_debits-analysis_reserved
  return {'balance':balance,'reserved':reserved,'spent':spent,'generation_cost':prices()['generation'],'edit_cost':prices()['edit'],'model_mode':'ai' if os.getenv('LLM_API_KEY') else 'local-outline'}

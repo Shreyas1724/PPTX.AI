@@ -1,7 +1,7 @@
 """Project-analysis worker reusing the existing worker process and DB queue."""
 import os, time, json, logging
 from sqlalchemy import select, update
-from .core import Session, User, CreditEvent, Document
+from .core import Session, User, CreditEvent, Document, Project
 from .project_models import ProjectBlueprint, ProjectBlueprintVersion, ProjectAnalysisJob
 from .project_ai import analyze
 from .activity import record
@@ -68,9 +68,15 @@ def process(job_id):
             if len(json.dumps(sections).encode())>250000:raise ValueError('AI project report exceeded storage limits.')
             success=session.execute(update(ProjectAnalysisJob).where(ProjectAnalysisJob.id==job_id,ProjectAnalysisJob.status=='running',ProjectAnalysisJob.lease_until>=int(time.time())).values(status='completed',updated_at=int(time.time()),result_json=json.dumps({'usage':usage,'sections':list(generated)})))
             if not success.rowcount:session.rollback();return
-            b.content_json=json.dumps(sections,ensure_ascii=False);b.status='analyzed';b.revision+=1;b.updated_at=int(time.time())
-            session.add(ProjectBlueprintVersion(project_id=b.project_id,revision=b.revision,
-                snapshot=json.dumps({'idea':b.idea,'domain':b.domain,'constraints':json.loads(b.constraints_json),'sections':sections,'status':b.status},ensure_ascii=False)))
+            updated=session.execute(update(ProjectBlueprint).where(
+                ProjectBlueprint.project_id==b.project_id,ProjectBlueprint.revision==job.base_revision
+            ).values(content_json=json.dumps(sections,ensure_ascii=False),status='analyzed',
+                revision=job.base_revision+1,updated_at=int(time.time())),execution_options={'synchronize_session':False})
+            if not updated.rowcount:
+                session.rollback();raise ValueError('Project was edited during analysis. AI results were discarded to protect newer work.')
+            project=session.get(Project,b.project_id)
+            session.add(ProjectBlueprintVersion(project_id=b.project_id,revision=job.base_revision+1,
+                snapshot=json.dumps({'idea':b.idea,'domain':b.domain,'constraints':json.loads(b.constraints_json),'sections':sections,'status':'analyzed','title':project.name},ensure_ascii=False)))
             record(session,job.owner_id,'project.analysis.completed','Project blueprint analyzed',b.project_id)
             session.commit()
     except Exception as exc:

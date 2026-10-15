@@ -3,14 +3,14 @@ import re
 from .slide_spec import SlideSpec
 
 LAYOUT_KEYWORDS=(
- ('references',r'\b(reference|bibliograph|citation|sources)\b'),
+ ('references',r'\b(references?|bibliograph(?:y|ies)|citations?|sources)\b'),
  ('conclusion',r'\b(conclusion|recommendation|takeaways?|next steps)\b'),
  ('problem_solution',r'\b(problem.*solution|challenge.*approach)\b'),
  ('architecture',r'\b(architecture|infrastructure|database|systems? design)\b'),
  ('methodology',r'\b(methodology|experiment|research method)\b'),
  ('timeline',r'\b(timeline|milestones?|phases?|roadmap)\b'),
  ('process',r'\b(workflow|pipeline|how it works|process|stages?)\b'),
- ('comparison',r'\b(compar|versus| vs\.? |pros and cons|alternatives)\b'),
+ ('comparison',r'\b(compar(?:e|ed|es|ing|ison|isons|ative|atively)|versus|vs\.?|pros and cons|alternatives)\b'),
  ('kpi',r'\b(metrics?|results?|performance|numbers|statistics|impact)\b'),
  ('summary',r'\b(summary|overview|executive brief)\b'),
 )
@@ -25,7 +25,7 @@ def plan_layouts(items:list[SlideSpec])->list[SlideSpec]:
         elif slide.metrics:
             chosen='kpi'
         elif slide.steps:
-            chosen='timeline' if re.search(r'\b(roadmap|timeline|phase|milestone)\b',slide.title.lower()) else 'process'
+            chosen='timeline' if re.search(r'\b(roadmap|timeline|phases?|milestones?)\b',slide.title.lower()) else 'process'
         elif index==0:
             chosen='title'
         elif index==len(items)-1 and re.search(r'\b(questions|thank|wrap|next)\b',slide.title.lower()):

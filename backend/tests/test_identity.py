@@ -18,6 +18,7 @@ class SecureClient(TestClient):
 @pytest.fixture
 def setup(monkeypatch):
  engine=create_engine('sqlite://',connect_args={'check_same_thread':False},poolclass=StaticPool)
+ with engine.connect() as connection:connection.exec_driver_sql('PRAGMA foreign_keys=ON')
  core.Session.configure(bind=engine); monkeypatch.setattr(main,'ENGINE',engine)
  for name in ['SMTP_HOST','SMTP_FROM','TWILIO_ACCOUNT_SID','TWILIO_AUTH_TOKEN','TWILIO_FROM','GOOGLE_CLIENT_ID']:
   monkeypatch.setenv(name,'test')

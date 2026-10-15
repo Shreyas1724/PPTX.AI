@@ -1,14 +1,14 @@
 """Project Studio APIs. All project IDs are checked against authenticated ownership."""
 import os, json, time, hashlib
 from fastapi import APIRouter, Depends, HTTPException, Header, Query
-from pydantic import BaseModel, Field
-from sqlalchemy import select, update, func
+from pydantic import BaseModel, Field, field_validator
+from sqlalchemy import select, update, delete, func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from .auth import current,db, limit as rate_limit
 from .core import Project, Presentation, Document, User, CreditEvent, Job, uid
 from .project_models import ProjectBlueprint, ProjectBlueprintVersion, ProjectAnalysisJob
-from .project_ai import REQUIRED_SECTIONS
+from .project_ai import REQUIRED_SECTIONS, validate_section
 from . import credits
 
 router=APIRouter(prefix='/api/v1/idea-projects', tags=['Projects Studio'])
@@ -36,7 +36,23 @@ def snapshot(session,b):
                              'sections':jloads(b.content_json),'status':b.status,'title':session.get(Project,b.project_id).name},ensure_ascii=False)))
 
 def bump(session,b):
-    b.revision+=1;b.updated_at=clock();snapshot(session,b)
+    revision=b.revision;updated_at=clock()
+    # Claim the revision before ORM autoflush can write any pending edits.
+    with session.no_autoflush:
+        changed=session.execute(update(ProjectBlueprint).where(
+            ProjectBlueprint.project_id==b.project_id,ProjectBlueprint.revision==revision
+        ).values(revision=revision+1,updated_at=updated_at),execution_options={'synchronize_session':False})
+    if not changed.rowcount:
+        session.rollback();raise HTTPException(409,'Project changed elsewhere; reload before saving.')
+    b.revision=revision+1;b.updated_at=updated_at;snapshot(session,b)
+
+def lock_blueprint(session,b):
+    # A no-op write also serializes requests on SQLite, where FOR UPDATE is ignored.
+    changed=session.execute(update(ProjectBlueprint).where(ProjectBlueprint.project_id==b.project_id)
+        .values(revision=ProjectBlueprint.revision),execution_options={'synchronize_session':False})
+    if not changed.rowcount:
+        session.rollback();raise HTTPException(404,'Project blueprint not found')
+    session.refresh(b)
 
 def valid_size(value):
     if len(json.dumps(value,ensure_ascii=False).encode())>115000:
@@ -47,6 +63,9 @@ class CreateIdea(BaseModel):
     idea:str=Field(min_length=12,max_length=7000)
     domain:str=Field(default='',max_length=120)
     constraints:dict=Field(default_factory=dict)
+    @field_validator('title','idea','domain',mode='before')
+    @classmethod
+    def stripped_text(cls,value):return value.strip() if isinstance(value,str) else value
 class UpdateIdea(BaseModel):
     title:str|None=Field(default=None,min_length=1,max_length=120)
     idea:str|None=Field(default=None,min_length=12,max_length=7000)
@@ -54,6 +73,9 @@ class UpdateIdea(BaseModel):
     constraints:dict|None=None
     archived:bool|None=None
     revision:int=Field(ge=0)
+    @field_validator('title','idea','domain',mode='before')
+    @classmethod
+    def stripped_text(cls,value):return value.strip() if isinstance(value,str) else value
 class SectionEdit(BaseModel):
     content:dict|list=Field()
     revision:int=Field(ge=0)
@@ -135,14 +157,18 @@ def update_idea(pid:str,data:UpdateIdea,user:User=Depends(current),session:Sessi
 @router.delete('/{pid}')
 def delete_idea(pid:str,user:User=Depends(current),session:Session=Depends(db)):
     p,b=owner(pid,user,session)
+    lock_blueprint(session,b)
     if session.scalar(select(Presentation.id).where(Presentation.project_id==pid).limit(1)):
         raise HTTPException(409,'This project has presentations. Archive it instead to preserve your decks.')
     if session.scalar(select(ProjectAnalysisJob.id).where(ProjectAnalysisJob.project_id==pid,ProjectAnalysisJob.status.in_(['queued','running'])).limit(1)):
         raise HTTPException(409,'Wait for the active analysis to finish.')
-    for model in (ProjectAnalysisJob,ProjectBlueprintVersion):
-        for item in session.scalars(select(model).where(model.project_id==pid)):session.delete(item)
-    for doc in session.scalars(select(Document).where(Document.project_id==pid)):session.delete(doc)
-    session.delete(b);session.delete(p);session.commit();return {'ok':True}
+    # These models have no ORM relationships: execute child removals before
+    # deleting either parent so foreign-key checks succeed on PostgreSQL.
+    for model in (ProjectAnalysisJob,ProjectBlueprintVersion,Document):
+        session.execute(delete(model).where(model.project_id==pid))
+    session.execute(delete(ProjectBlueprint).where(ProjectBlueprint.project_id==pid))
+    session.execute(delete(Project).where(Project.id==pid))
+    session.commit();return {'ok':True}
 
 @router.patch('/{pid}/sections/{section}')
 def update_section(pid:str,section:str,data:SectionEdit,user:User=Depends(current),session:Session=Depends(db)):
@@ -150,9 +176,8 @@ def update_section(pid:str,section:str,data:SectionEdit,user:User=Depends(curren
     p,b=owner(pid,user,session)
     if data.revision!=b.revision:raise HTTPException(409,'Reload this project; another change was saved.')
     valid_size(data.content)
-    wants_list=section in ('requirements','innovations','roadmap')
-    if wants_list!=isinstance(data.content,list):raise HTTPException(422,'This section requires '+('an array' if wants_list else 'an object'))
-    if wants_list and any(not isinstance(v,dict) for v in data.content):raise HTTPException(422,'Section items must be objects.')
+    try:validate_section(section,data.content)
+    except ValueError as exc:raise HTTPException(422,str(exc)) from exc
     sections=jloads(b.content_json);sections[section]=data.content
     b.content_json=json.dumps(sections,ensure_ascii=False);b.status='edited'
     bump(session,b);session.commit();return serialized(p,b)
@@ -221,13 +246,21 @@ def start_analysis(pid:str,data:AnalysisStart,idempotency_key:str=Header(...,min
     if b.archived:raise HTTPException(409,'Unarchive this project before running analysis.')
     section=data.section
     if section is not None and section not in REQUIRED_SECTIONS:raise HTTPException(422,'Unknown analysis section')
-    fingerprint=hashlib.sha256(json.dumps({'pid':pid,'revision':b.revision,'section':section},sort_keys=True).encode()).hexdigest()
     old=session.scalar(select(ProjectAnalysisJob).where(ProjectAnalysisJob.owner_id==user.id,ProjectAnalysisJob.request_key==idempotency_key))
     if old:
-        if old.fingerprint!=fingerprint:raise HTTPException(409,'Idempotency key already used for another request.')
+        if old.project_id!=pid or old.section!=section:raise HTTPException(409,'Idempotency key already used for another request.')
         return {'job_id':old.id,'status':old.status,'cost':old.cost}
     if not os.getenv('LLM_API_KEY'):raise HTTPException(503,'Project AI is not configured. Add LLM_API_KEY to enable genuine analysis.')
     rate_limit(session,'projects_analysis:'+user.id,12,3600)
+    lock_blueprint(session,b)
+    if b.archived:raise HTTPException(409,'Unarchive this project before running analysis.')
+    fingerprint=hashlib.sha256(json.dumps({'pid':pid,'revision':b.revision,'section':section},sort_keys=True).encode()).hexdigest()
+    # Recheck after acquiring the project lock: another request may have queued
+    # the same operation while the rate-limit transaction was being committed.
+    old=session.scalar(select(ProjectAnalysisJob).where(ProjectAnalysisJob.owner_id==user.id,ProjectAnalysisJob.request_key==idempotency_key))
+    if old:
+        if old.project_id!=pid or old.section!=section:raise HTTPException(409,'Idempotency key already used for another request.')
+        return {'job_id':old.id,'status':old.status,'cost':old.cost}
     if session.scalar(select(ProjectAnalysisJob.id).where(ProjectAnalysisJob.project_id==pid,ProjectAnalysisJob.status.in_(['queued','running'])).limit(1)):
         raise HTTPException(409,'This project already has a running analysis.')
     cost=max(0,int(os.getenv('PROJECT_ANALYSIS_COST','0')))
@@ -237,13 +270,14 @@ def start_analysis(pid:str,data:AnalysisStart,idempotency_key:str=Header(...,min
     job=ProjectAnalysisJob(project_id=pid,owner_id=user.id,request_key=idempotency_key,
         fingerprint=fingerprint,mode='section' if section else 'all',section=section,
         base_revision=b.revision,cost=cost)
-    session.add(job);session.flush()
-    if cost:session.add(CreditEvent(user_id=user.id,amount=-cost,reason='project_analysis:reserve',key='project-reserve:'+job.id))
-    try:session.commit()
+    try:
+        session.add(job);session.flush()
+        if cost:session.add(CreditEvent(user_id=user.id,amount=-cost,reason='project_analysis:reserve',key='project-reserve:'+job.id))
+        session.commit()
     except IntegrityError:
         session.rollback()
         duplicate=session.scalar(select(ProjectAnalysisJob).where(ProjectAnalysisJob.owner_id==user.id,ProjectAnalysisJob.request_key==idempotency_key))
-        if duplicate and duplicate.fingerprint==fingerprint:return {'job_id':duplicate.id,'status':duplicate.status,'cost':duplicate.cost}
+        if duplicate and duplicate.project_id==pid and duplicate.section==section:return {'job_id':duplicate.id,'status':duplicate.status,'cost':duplicate.cost}
         raise HTTPException(409,'Concurrent analysis request. Refresh and try again.')
     return {'job_id':job.id,'status':job.status,'cost':job.cost}
 
@@ -270,6 +304,7 @@ def get_job(pid:str,jid:str,user:User=Depends(current),session:Session=Depends(d
 @router.post('/{pid}/handoff',status_code=202)
 def handoff(pid:str,data:Handoff,idempotency_key:str=Header(...,min_length=1,max_length=128),user:User=Depends(current),session:Session=Depends(db)):
     p,b=owner(pid,user,session)
+    lock_blueprint(session,b)
     if b.archived:raise HTTPException(409,'Unarchive before generating a presentation.')
     sections=jloads(b.content_json)
     if not sections.get('overview'):raise HTTPException(409,'Analyze or manually fill the project overview before generating slides.')

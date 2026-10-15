@@ -52,10 +52,15 @@ def verify_signature(raw,signature):
  except Exception:raise HTTPException(400,'Invalid webhook signature')
 
 def fulfill(session,event):
+ if not isinstance(event,dict):raise HTTPException(400,'Invalid webhook event')
  if event.get('type') not in ('checkout.session.completed','checkout.session.async_payment_succeeded'):return
- data=event.get('data',{}).get('object',{})
+ envelope=event.get('data')
+ if not isinstance(envelope,dict) or not isinstance(envelope.get('object'),dict):raise HTTPException(400,'Invalid checkout event')
+ data=envelope['object']
  if data.get('payment_status')!='paid':return
- order_id=data.get('metadata',{}).get('order_id');order=session.get(Purchase,order_id) if order_id else None
+ metadata=data.get('metadata')
+ if not isinstance(metadata,dict) or not isinstance(metadata.get('order_id'),str):raise HTTPException(400,'Invalid order metadata')
+ order_id=metadata['order_id'];order=session.get(Purchase,order_id) if order_id else None
  if not order:raise HTTPException(400,'Unknown order')
  if data.get('amount_total')!=order.amount or data.get('currency')!=order.currency or data.get('client_reference_id')!=order.id:raise HTTPException(400,'Payment does not match the order')
  if not order.stripe_session:raise HTTPException(503,'Order is still being initialized; retry delivery')

@@ -43,7 +43,13 @@ def owned_deck(did,user,session):
  owned_project(p.project_id,user,session); return p
 def deck_out(p): return {'id':p.id,'project_id':p.project_id,'title':p.title,'theme':p.theme,'version':p.version,'slides':json.loads(p.slides)}
 def snapshot(p,session):
- p.version+=1; session.add(Version(presentation_id=p.id,number=p.version,slides=p.slides,theme=p.theme)); session.commit(); session.refresh(p)
+ version=p.version
+ with session.no_autoflush:
+  changed=session.execute(update(Presentation).where(Presentation.id==p.id,Presentation.version==version)
+   .values(version=version+1),execution_options={'synchronize_session':False})
+ if not changed.rowcount:
+  session.rollback();raise HTTPException(409,'The presentation changed elsewhere. Reload before saving your edit.')
+ p.version=version+1; session.add(Version(presentation_id=p.id,number=p.version,slides=p.slides,theme=p.theme)); session.commit(); session.refresh(p)
 class Credentials(BaseModel):
  email:str; password:str=Field(min_length=8,max_length=128)
 class Name(BaseModel): name:str=Field(min_length=1,max_length=120)
@@ -91,6 +97,8 @@ def rename_project(pid:str,data:Name,user:User=Depends(current),session:Session=
 @app.delete('/api/v1/projects/{pid}')
 def delete_project(pid:str,user:User=Depends(current),session:Session=Depends(db)):
  owned_project(pid,user,session)
+ from .project_models import ProjectBlueprint
+ if session.get(ProjectBlueprint,pid):raise HTTPException(409,'Delete or archive this blueprint through Projects Studio to preserve its history.')
  if session.scalar(select(Presentation).where(Presentation.project_id==pid)): raise HTTPException(409,'Delete presentations first')
  for doc in session.scalars(select(Document).where(Document.project_id==pid)):session.delete(doc)
  session.delete(session.get(Project,pid)); session.commit(); return {'ok':True}
@@ -115,6 +123,17 @@ def update_deck(did:str,data:DeckUpdate,user:User=Depends(current),session:Sessi
 def delete_deck(did:str,user:User=Depends(current),session:Session=Depends(db)):
  p=owned_deck(did,user,session)
  if session.scalar(select(Job).where(Job.presentation_id==did,Job.status.in_(['queued','running']))):raise HTTPException(409,'Wait for active jobs to finish before deleting this deck.')
+ from .core import ControlSession, ControlCommand, ControllerDevice, PairingInvitation, ControlAuditEvent
+ controls=session.scalars(select(ControlSession).where(ControlSession.presentation_id==did)).all()
+ if any(c.status not in ('ended','expired') and c.expires_at>int(time.time()) for c in controls):
+  raise HTTPException(409,'End mobile control before deleting this deck.')
+ for control in controls:
+  for model in (ControlCommand,PairingInvitation,ControlAuditEvent,ControllerDevice):
+   for row in session.scalars(select(model).where(model.session_id==control.id)):session.delete(row)
+   session.flush()
+  session.flush()
+  session.delete(control)
+ session.flush()
  for v in session.scalars(select(Version).where(Version.presentation_id==did)): session.delete(v)
  for j in session.scalars(select(Job).where(Job.presentation_id==did)): session.delete(j)
  session.delete(p); session.commit(); return {'ok':True}
@@ -234,8 +253,11 @@ async def security_and_activity(request:Request,call_next):
    elif '/presentations' in path: action=('presentation.'+{'POST':'created','PATCH':'edited','DELETE':'deleted'}[request.method],'Presentation '+{'POST':'created','PATCH':'updated','DELETE':'deleted'}[request.method])
    elif '/projects' in path: action=('project.'+{'POST':'created','PATCH':'edited','DELETE':'deleted'}[request.method],'Project '+{'POST':'created','PATCH':'renamed','DELETE':'deleted'}[request.method])
   if action:
-   with DBSession() as session:
-    record(session,user_id,action[0],action[1],resource,status='completed' if response.status_code<400 else 'failed'); session.commit()
+   try:
+    with DBSession() as session:
+     record(session,user_id,action[0],action[1],resource,status='completed' if response.status_code<400 else 'failed'); session.commit()
+   except Exception as exc:
+    logging.getLogger('pptx.api').error('activity_record_failed',extra={'request_id':request_id,'error_type':type(exc).__name__})
  return response
 
 @app.get('/api/v1/history',tags=['History'])
