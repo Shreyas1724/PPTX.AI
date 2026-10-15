@@ -1,0 +1,10 @@
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@config "../tailwind.config.cjs";
+.works-wheel{--background:225 35% 6%;--foreground:250 40% 95%;--muted:230 25% 15%;--muted-foreground:240 12% 62%}
+.works-wheel ol{list-style:none;margin:0;padding:0}.works-wheel button{background:none;border:0;padding:0;font:inherit}.works-wheel a{text-decoration:none}
+.wheelShowcase{padding:60px 5% 0;background:#0a0d16}.wheelShowcaseHeader{display:flex;justify-content:space-between;align-items:end;gap:24px}.wheelShowcaseHeader h2{font-family:'Space Grotesk',sans-serif;font-size:clamp(32px,4vw,60px);letter-spacing:-.06em;margin:16px 0}.wheelShowcaseHeader p{font-size:13px;color:#9295af;max-width:260px;line-height:1.7}.wheelDemo{height:760px;height:clamp(480px,80vh,880px);width:100%}.wheelHint{display:flex;justify-content:space-between;padding:20px 0;border-top:1px solid #ffffff18;color:#9295af;font-size:11px;letter-spacing:.12em}.wheelDemo .works-wheel{border-radius:20px;background:radial-gradient(ellipse at 50% 50%,#26203c 0, #0a0d16 65%)}
+@media(max-width:600px){.wheelShowcase{padding:40px 5% 0}.wheelShowcaseHeader{display:block}.wheelDemo{height:520px}.wheelHint{font-size:9px;gap:10px}.works-wheel [role=listbox]+div+div{left:4%;max-width:23%;font-size:14px!important}.works-wheel ol{font-size:10px!important;right:4%;max-width:45%}}
+
+.works-wheel button{color:hsl(var(--muted-foreground))}.works-wheel button.text-foreground{color:hsl(var(--foreground))}

@@ -1,0 +1,133 @@
+{
+  "note": "Deterministic local placeholder outlines; tests validate shape geometry only, NOT factual or artistic quality.",
+  "cases": 18,
+  "failed_structural_cases": 0,
+  "results": [
+    {
+      "category": "academic",
+      "slide_count": 5,
+      "reopens": true,
+      "critical_geometry_findings": 0,
+      "text_fit_warnings": 3
+    },
+    {
+      "category": "academic",
+      "slide_count": 10,
+      "reopens": true,
+      "critical_geometry_findings": 0,
+      "text_fit_warnings": 3
+    },
+    {
+      "category": "academic",
+      "slide_count": 20,
+      "reopens": true,
+      "critical_geometry_findings": 0,
+      "text_fit_warnings": 6
+    },
+    {
+      "category": "business",
+      "slide_count": 5,
+      "reopens": true,
+      "critical_geometry_findings": 0,
+      "text_fit_warnings": 2
+    },
+    {
+      "category": "business",
+      "slide_count": 10,
+      "reopens": true,
+      "critical_geometry_findings": 0,
+      "text_fit_warnings": 2
+    },
+    {
+      "category": "business",
+      "slide_count": 20,
+      "reopens": true,
+      "critical_geometry_findings": 0,
+      "text_fit_warnings": 4
+    },
+    {
+      "category": "finance",
+      "slide_count": 5,
+      "reopens": true,
+      "critical_geometry_findings": 0,
+      "text_fit_warnings": 3
+    },
+    {
+      "category": "finance",
+      "slide_count": 10,
+      "reopens": true,
+      "critical_geometry_findings": 0,
+      "text_fit_warnings": 3
+    },
+    {
+      "category": "finance",
+      "slide_count": 20,
+      "reopens": true,
+      "critical_geometry_findings": 0,
+      "text_fit_warnings": 6
+    },
+    {
+      "category": "startup",
+      "slide_count": 5,
+      "reopens": true,
+      "critical_geometry_findings": 0,
+      "text_fit_warnings": 3
+    },
+    {
+      "category": "startup",
+      "slide_count": 10,
+      "reopens": true,
+      "critical_geometry_findings": 0,
+      "text_fit_warnings": 3
+    },
+    {
+      "category": "startup",
+      "slide_count": 20,
+      "reopens": true,
+      "critical_geometry_findings": 0,
+      "text_fit_warnings": 6
+    },
+    {
+      "category": "technical",
+      "slide_count": 5,
+      "reopens": true,
+      "critical_geometry_findings": 0,
+      "text_fit_warnings": 2
+    },
+    {
+      "category": "technical",
+      "slide_count": 10,
+      "reopens": true,
+      "critical_geometry_findings": 0,
+      "text_fit_warnings": 2
+    },
+    {
+      "category": "technical",
+      "slide_count": 20,
+      "reopens": true,
+      "critical_geometry_findings": 0,
+      "text_fit_warnings": 4
+    },
+    {
+      "category": "education",
+      "slide_count": 5,
+      "reopens": true,
+      "critical_geometry_findings": 0,
+      "text_fit_warnings": 2
+    },
+    {
+      "category": "education",
+      "slide_count": 10,
+      "reopens": true,
+      "critical_geometry_findings": 0,
+      "text_fit_warnings": 2
+    },
+    {
+      "category": "education",
+      "slide_count": 20,
+      "reopens": true,
+      "critical_geometry_findings": 0,
+      "text_fit_warnings": 4
+    }
+  ]
+}

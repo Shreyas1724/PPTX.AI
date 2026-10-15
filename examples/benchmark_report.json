@@ -1,0 +1,29 @@
+{
+  "fixture": "15 illustrative slides with user-provided dummy chart data; not a model quality study",
+  "baseline_source": "PPTX_AI_Projects_Integrated_Full.zip",
+  "measured": "PPTX structure and independent LibreOffice PDF rendering only",
+  "old": {
+    "slides": 15,
+    "native_charts": 0,
+    "native_connectors": 0,
+    "text_elements": 37,
+    "distinct_shape_sequences": 1,
+    "critical_geometry_findings": 0,
+    "heuristic_text_and_readability_warnings": 0,
+    "external_pdf_reopen": "passed"
+  },
+  "new": {
+    "slides": 15,
+    "native_charts": 3,
+    "native_connectors": 10,
+    "text_elements": 136,
+    "distinct_shape_sequences": 11,
+    "critical_geometry_findings": 0,
+    "heuristic_text_and_readability_warnings": 6,
+    "external_pdf_reopen": "passed"
+  },
+  "human_visual_quality": "not_measured",
+  "model_factual_accuracy": "not_measured",
+  "generation_cost": "not_measured",
+  "render_speed": "not_measured"
+}

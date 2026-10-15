@@ -1,0 +1,106 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: pptx
+      POSTGRES_USER: pptx
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local_dev_password}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pptx"]
+      interval: 5s
+      retries: 10
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+  backend:
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs: [/tmp]
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://pptx:${POSTGRES_PASSWORD:-local_dev_password}@postgres:5432/pptx
+      REDIS_URL: redis://redis:6379/0
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      CONTROL_SESSION_TTL: ${CONTROL_SESSION_TTL:-7200}
+      CONTROL_PAIRING_TTL: ${CONTROL_PAIRING_TTL:-120}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      OTP_SECRET: ${OTP_SECRET:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURITY: ${SMTP_SECURITY:-starttls}
+      SMTP_FROM: ${SMTP_FROM:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_FROM: ${TWILIO_FROM:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.openai.com/v1}
+      PPTX_VISUAL_QA: ${PPTX_VISUAL_QA:-0}
+      PROJECT_ANALYSIS_COST: ${PROJECT_ANALYSIS_COST:-0}
+      PROJECT_RESEARCH_BRAVE_API_KEY: ${PROJECT_RESEARCH_BRAVE_API_KEY:-}
+      GENERATION_COST: ${GENERATION_COST:-2}
+      AI_EDIT_COST: ${AI_EDIT_COST:-1}
+      APP_ENV: ${APP_ENV:-development}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost:3000}
+      CREDIT_PACK_AMOUNT: ${CREDIT_PACK_AMOUNT:-0}
+      CREDIT_PACK_CREDITS: ${CREDIT_PACK_CREDITS:-100}
+      BILLING_CURRENCY: ${BILLING_CURRENCY:-inr}
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health/ready')"]
+      interval: 10s
+      retries: 10
+  worker:
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs: [/tmp]
+    build:
+      context: ./backend
+      args:
+        INSTALL_RENDERING_QA: ${PPTX_INSTALL_RENDERING_QA:-0}
+    command: python -m app.worker
+    environment:
+      DATABASE_URL: postgresql+psycopg://pptx:${POSTGRES_PASSWORD:-local_dev_password}@postgres:5432/pptx
+      REDIS_URL: redis://redis:6379/0
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_MODEL: ${LLM_MODEL:-gpt-4o-mini}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://api.openai.com/v1}
+      PPTX_VISUAL_QA: ${PPTX_VISUAL_QA:-0}
+      PROJECT_ANALYSIS_COST: ${PROJECT_ANALYSIS_COST:-0}
+      PROJECT_RESEARCH_BRAVE_API_KEY: ${PROJECT_RESEARCH_BRAVE_API_KEY:-}
+    depends_on:
+      backend: {condition: service_healthy}
+  maintenance:
+    build: ./backend
+    command: python -m app.activity
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://pptx:${POSTGRES_PASSWORD:-local_dev_password}@postgres:5432/pptx
+    depends_on:
+      backend: {condition: service_healthy}
+  frontend:
+    build: ./frontend
+    ports: ["3000:80"]
+    depends_on:
+      backend: {condition: service_healthy}
+volumes:
+  pgdata:
+  redisdata:

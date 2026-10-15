@@ -1,0 +1,194 @@
+{
+  "status": "warnings",
+  "validation_type": "deterministic geometry + heuristic text-size estimates",
+  "slide_count": 15,
+  "shape_count": 217,
+  "editable_shape_count": 207,
+  "editable_shape_ratio": 0.954,
+  "geometry_score_out_of_100": 82,
+  "score_is_not_visual_quality": true,
+  "critical_count": 0,
+  "warning_count": 6,
+  "slides": [
+    {
+      "slide": 1,
+      "issues": [],
+      "text_elements": 7,
+      "editable_elements": 11
+    },
+    {
+      "slide": 2,
+      "issues": [
+        {
+          "code": "possible_text_overflow",
+          "severity": "warning",
+          "element": 6,
+          "detail": "Text may exceed its box; review rendered output."
+        },
+        {
+          "code": "possible_text_overflow",
+          "severity": "warning",
+          "element": 9,
+          "detail": "Text may exceed its box; review rendered output."
+        },
+        {
+          "code": "possible_text_overflow",
+          "severity": "warning",
+          "element": 12,
+          "detail": "Text may exceed its box; review rendered output."
+        },
+        {
+          "code": "possible_text_overflow",
+          "severity": "warning",
+          "element": 15,
+          "detail": "Text may exceed its box; review rendered output."
+        }
+      ],
+      "text_elements": 11,
+      "editable_elements": 17
+    },
+    {
+      "slide": 3,
+      "issues": [],
+      "text_elements": 13,
+      "editable_elements": 17
+    },
+    {
+      "slide": 4,
+      "issues": [],
+      "text_elements": 13,
+      "editable_elements": 17
+    },
+    {
+      "slide": 5,
+      "issues": [],
+      "text_elements": 13,
+      "editable_elements": 20
+    },
+    {
+      "slide": 6,
+      "issues": [],
+      "text_elements": 8,
+      "editable_elements": 15
+    },
+    {
+      "slide": 7,
+      "issues": [],
+      "text_elements": 11,
+      "editable_elements": 21
+    },
+    {
+      "slide": 8,
+      "issues": [
+        {
+          "code": "possible_text_overflow",
+          "severity": "warning",
+          "element": 6,
+          "detail": "Text may exceed its box; review rendered output."
+        }
+      ],
+      "text_elements": 4,
+      "editable_elements": 7
+    },
+    {
+      "slide": 9,
+      "issues": [
+        {
+          "code": "possible_text_overflow",
+          "severity": "warning",
+          "element": 6,
+          "detail": "Text may exceed its box; review rendered output."
+        }
+      ],
+      "text_elements": 4,
+      "editable_elements": 7
+    },
+    {
+      "slide": 10,
+      "issues": [],
+      "text_elements": 4,
+      "editable_elements": 7
+    },
+    {
+      "slide": 11,
+      "issues": [],
+      "text_elements": 12,
+      "editable_elements": 17
+    },
+    {
+      "slide": 12,
+      "issues": [],
+      "text_elements": 12,
+      "editable_elements": 17
+    },
+    {
+      "slide": 13,
+      "issues": [],
+      "text_elements": 11,
+      "editable_elements": 17
+    },
+    {
+      "slide": 14,
+      "issues": [],
+      "text_elements": 7,
+      "editable_elements": 9
+    },
+    {
+      "slide": 15,
+      "issues": [],
+      "text_elements": 6,
+      "editable_elements": 8
+    }
+  ],
+  "findings": [
+    {
+      "slide": 2,
+      "code": "possible_text_overflow",
+      "severity": "warning",
+      "element": 6,
+      "detail": "Text may exceed its box; review rendered output."
+    },
+    {
+      "slide": 2,
+      "code": "possible_text_overflow",
+      "severity": "warning",
+      "element": 9,
+      "detail": "Text may exceed its box; review rendered output."
+    },
+    {
+      "slide": 2,
+      "code": "possible_text_overflow",
+      "severity": "warning",
+      "element": 12,
+      "detail": "Text may exceed its box; review rendered output."
+    },
+    {
+      "slide": 2,
+      "code": "possible_text_overflow",
+      "severity": "warning",
+      "element": 15,
+      "detail": "Text may exceed its box; review rendered output."
+    },
+    {
+      "slide": 8,
+      "code": "possible_text_overflow",
+      "severity": "warning",
+      "element": 6,
+      "detail": "Text may exceed its box; review rendered output."
+    },
+    {
+      "slide": 9,
+      "code": "possible_text_overflow",
+      "severity": "warning",
+      "element": 6,
+      "detail": "Text may exceed its box; review rendered output."
+    }
+  ],
+  "independent_render": {
+    "status": "passed",
+    "pages": 15,
+    "detail": "Independent conversion produced 15 of 15 expected pages."
+  },
+  "factual_review": "not_performed",
+  "human_design_review": "not_performed"
+}
