@@ -2,17 +2,16 @@ import { createContext, useContext, useLayoutEffect, useState, type ReactNode } 
 
 export type ThemeId = 'nature'|'ocean'|'space'|'sunset'|'aurora'|'minimal'|'cyberpunk'|'rose';
 export type AppearanceTheme = {id:ThemeId;name:string;description:string;image:string;fallbackImage:string;accent:string;bg:string;panel:string;strong:string;ink:string;muted:string;accentInk:string;glow:string;font:string;displayFont:string;radius:string;scheme:'dark'|'light'};
-const sans = "'DM Sans', sans-serif";
-const display = "'Space Grotesk', sans-serif";
+const uiFont = '"Times New Roman", Times, "Liberation Serif", serif';
 export const THEMES:AppearanceTheme[] = [
- {id:'nature',name:'Nature',description:'Forest light. A fresh perspective.',accent:'#bde2a3',bg:'#091b14',panel:'#102a20',strong:'#18392b',ink:'#f3f5e9',muted:'#bacbbd',accentInk:'#142315',glow:'#60865a',font:sans,displayFont:"'Instrument Serif', Georgia, serif",radius:'22px',scheme:'dark'},
- {id:'ocean',name:'Ocean',description:'Deep blues. Room to explore.',accent:'#8de1ee',bg:'#071923',panel:'#102b3b',strong:'#173b4d',ink:'#eefaff',muted:'#accbd7',accentInk:'#072931',glow:'#247f9c',font:sans,displayFont:display,radius:'18px',scheme:'dark'},
- {id:'space',name:'Space',description:'Big ideas. Infinite possibility.',accent:'#cbb5fa',bg:'#0b0b15',panel:'#191525',strong:'#292039',ink:'#f5f1fb',muted:'#bdb2cf',accentInk:'#211333',glow:'#7752bd',font:sans,displayFont:display,radius:'18px',scheme:'dark'},
- {id:'sunset',name:'Sunset',description:'Golden hour, all day long.',accent:'#ff8a1f',bg:'#120400',panel:'#2a0b02',strong:'#4a1c0b',ink:'#fff3e7',muted:'#dbb7aa',accentInk:'#3b1b15',glow:'#ba6658',font:sans,displayFont:"'Instrument Serif', Georgia, serif",radius:'24px',scheme:'dark'},
- {id:'aurora',name:'Aurora',description:'A little wonder in every detail.',accent:'#a3efcc',bg:'#0c1820',panel:'#142b35',strong:'#213c47',ink:'#effcf9',muted:'#b1d0cd',accentInk:'#112e27',glow:'#548e8d',font:sans,displayFont:display,radius:'22px',scheme:'dark'},
- {id:'minimal',name:'Minimal',description:'Less noise. More meaning.',accent:'#333a30',bg:'#eeece5',panel:'#faf9f4',strong:'#e2e3d8',ink:'#242a23',muted:'#606658',accentInk:'#fafaf2',glow:'#a7b19c',font:sans,displayFont:display,radius:'8px',scheme:'light'},
- {id:'cyberpunk',name:'Cyberpunk',description:'Electric color. Unfiltered ambition.',accent:'#e7fa91',bg:'#111020',panel:'#211931',strong:'#31213e',ink:'#faf5ff',muted:'#c4b4d2',accentInk:'#252b12',glow:'#b343aa',font:sans,displayFont:display,radius:'6px',scheme:'dark'},
- {id:'rose',name:'Rose',description:'Soft edges. A bold point of view.',accent:'#f1b7ca',bg:'#24171f',panel:'#38232f',strong:'#503341',ink:'#fff3f7',muted:'#d6b9c7',accentInk:'#3b1c2b',glow:'#ae6686',font:sans,displayFont:"'Instrument Serif', Georgia, serif",radius:'26px',scheme:'dark'},
+ {id:'nature',name:'Nature',description:'Forest light. A fresh perspective.',accent:'#bde2a3',bg:'#091b14',panel:'#102a20',strong:'#18392b',ink:'#f3f5e9',muted:'#bacbbd',accentInk:'#142315',glow:'#60865a',font:uiFont,displayFont:uiFont,radius:'22px',scheme:'dark'},
+ {id:'ocean',name:'Ocean',description:'Deep blues. Room to explore.',accent:'#8de1ee',bg:'#071923',panel:'#102b3b',strong:'#173b4d',ink:'#eefaff',muted:'#accbd7',accentInk:'#072931',glow:'#247f9c',font:uiFont,displayFont:uiFont,radius:'18px',scheme:'dark'},
+ {id:'space',name:'Space',description:'Big ideas. Infinite possibility.',accent:'#cbb5fa',bg:'#0b0b15',panel:'#191525',strong:'#292039',ink:'#f5f1fb',muted:'#bdb2cf',accentInk:'#211333',glow:'#7752bd',font:uiFont,displayFont:uiFont,radius:'18px',scheme:'dark'},
+ {id:'sunset',name:'Sunset',description:'Golden hour, all day long.',accent:'#ff8a1f',bg:'#120400',panel:'#2a0b02',strong:'#4a1c0b',ink:'#fff3e7',muted:'#dbb7aa',accentInk:'#3b1b15',glow:'#ba6658',font:uiFont,displayFont:uiFont,radius:'24px',scheme:'dark'},
+ {id:'aurora',name:'Aurora',description:'A little wonder in every detail.',accent:'#a3efcc',bg:'#0c1820',panel:'#142b35',strong:'#213c47',ink:'#effcf9',muted:'#b1d0cd',accentInk:'#112e27',glow:'#548e8d',font:uiFont,displayFont:uiFont,radius:'22px',scheme:'dark'},
+ {id:'minimal',name:'Minimal',description:'Less noise. More meaning.',accent:'#333a30',bg:'#eeece5',panel:'#faf9f4',strong:'#e2e3d8',ink:'#242a23',muted:'#606658',accentInk:'#fafaf2',glow:'#a7b19c',font:uiFont,displayFont:uiFont,radius:'8px',scheme:'light'},
+ {id:'cyberpunk',name:'Cyberpunk',description:'Electric color. Unfiltered ambition.',accent:'#e7fa91',bg:'#111020',panel:'#211931',strong:'#31213e',ink:'#faf5ff',muted:'#c4b4d2',accentInk:'#252b12',glow:'#b343aa',font:uiFont,displayFont:uiFont,radius:'6px',scheme:'dark'},
+ {id:'rose',name:'Rose',description:'Soft edges. A bold point of view.',accent:'#f1b7ca',bg:'#24171f',panel:'#38232f',strong:'#503341',ink:'#fff3f7',muted:'#d6b9c7',accentInk:'#3b1c2b',glow:'#ae6686',font:uiFont,displayFont:uiFont,radius:'26px',scheme:'dark'},
 ].map(theme=>({...theme,image:`/themes/${theme.id}.jpg`,fallbackImage:`/themes/${theme.id}.svg`})) as AppearanceTheme[];
 
 const STORAGE_KEY='pptx-appearance';

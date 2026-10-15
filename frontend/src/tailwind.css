@@ -4,4 +4,4 @@
 @config "../tailwind.config.cjs";
 .works-wheel{--background:#0a0d15;--foreground:#f2edff;--muted:#1d2130;--muted-foreground:#999aaf}
 .works-wheel ol{list-style:none;margin:0;padding:0}.works-wheel button{background:none;border:0;padding:0;font:inherit;color:var(--muted-foreground)}.works-wheel button.text-foreground{color:var(--foreground)}.works-wheel a{text-decoration:none}
-@media(max-width:600px){.works-wheel [role=listbox]+div+div{left:4%;max-width:23%;font-size:14px!important}.works-wheel ol{font-size:10px!important;right:4%;max-width:45%}}
+@media(max-width:600px){.works-wheel [role=listbox]+div+div{left:4%;max-width:23%;font-size:16px!important}.works-wheel ol{font-size:12px!important;right:4%;max-width:45%}}

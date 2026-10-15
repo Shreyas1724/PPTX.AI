@@ -1,0 +1,95 @@
+.featurePage,.featureLibrary{position:relative;isolation:isolate;--feature-glass:color-mix(in srgb,var(--app-panel,#191525) 83%,transparent);--feature-glass-strong:color-mix(in srgb,var(--app-panel,#191525) 94%,transparent);color:var(--app-ink)}
+.featurePage{min-height:100svh;background:var(--app-bg)}
+.featureBackground{position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;background:var(--app-bg,#0b0b15);--scene-x:0px;--scene-y:0px;--scene-tilt-x:0deg;--scene-tilt-y:0deg;contain:paint}
+.featureBackground>div,.featureBackground>canvas{position:absolute;pointer-events:none}
+.featureBackground__photo{inset:-5%;background-image:var(--scene-image);background-position:center;background-size:cover;opacity:.62;transform:translate3d(calc(var(--scene-x) * -.4),calc(var(--scene-y) * -.4),0) scale(1.04);animation:featurePhotoDrift 36s ease-in-out infinite alternate;filter:saturate(.85)}
+.featureBackground__veil{inset:0;background:linear-gradient(90deg,color-mix(in srgb,var(--app-bg) 88%,transparent) 0%,color-mix(in srgb,var(--app-bg) 69%,transparent) 43%,color-mix(in srgb,var(--app-bg) 32%,transparent) 100%),linear-gradient(0deg,var(--app-bg) 0%,transparent 40%,color-mix(in srgb,var(--app-bg) 24%,transparent) 100%)}
+.featureBackground__nebula{width:55vw;height:55vw;min-width:450px;min-height:450px;border-radius:50%;filter:blur(60px);opacity:.21;mix-blend-mode:screen;will-change:transform}
+.featureBackground__nebula--one{top:-38%;right:-15%;background:radial-gradient(ellipse,var(--scene-color),transparent 65%);animation:featureLightOne 24s ease-in-out infinite alternate}
+.featureBackground__nebula--two{left:5%;bottom:-64%;background:radial-gradient(ellipse,var(--scene-secondary),transparent 66%);opacity:.12;animation:featureLightTwo 29s ease-in-out infinite alternate}
+.featureBackground__horizon{width:125%;height:24%;left:-10%;bottom:-10%;border-radius:50%;border:1px solid color-mix(in srgb,var(--scene-color) 35%,transparent);box-shadow:0 -12px 90px color-mix(in srgb,var(--scene-color) 12%,transparent),inset 0 15px 70px color-mix(in srgb,var(--scene-color) 6%,transparent);transform:rotate(-12deg)}
+.featureBackground__sculpture{width:clamp(300px,37vw,620px);aspect-ratio:1;right:-3%;top:18%;perspective:1000px;transform-style:preserve-3d;transform:translate3d(var(--scene-x),var(--scene-y),0) rotateX(var(--scene-tilt-x)) rotateY(var(--scene-tilt-y));opacity:.72}
+.featureBackground__orb{position:absolute;inset:21%;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 29% 22%,#ffffffb8 0%,color-mix(in srgb,var(--scene-color) 78%,transparent) 5%,color-mix(in srgb,var(--scene-color) 20%,transparent) 23%,#ffffff08 40%,#00000038 65%,color-mix(in srgb,var(--scene-secondary) 58%,transparent) 96%);box-shadow:inset 2px 2px 6px #ffffff80,inset -16px -20px 38px #0007,inset -3px -1px 6px color-mix(in srgb,var(--scene-color) 65%,transparent),0 30px 70px #0005,0 0 65px color-mix(in srgb,var(--scene-color) 14%,transparent);border:1px solid #ffffff30;backdrop-filter:blur(4px);animation:featureOrbFloat 11s ease-in-out infinite}
+.featureBackground__orb>div{position:absolute;inset:-40%;background:conic-gradient(from 40deg,transparent 0deg,#ffffff18 60deg,transparent 110deg,color-mix(in srgb,var(--scene-secondary) 35%,transparent) 170deg,transparent 240deg,#ffffff23 290deg,transparent);filter:blur(12px);animation:featureOrbSheen 30s linear infinite}
+.featureBackground__ring{position:absolute;inset:12% -3%;border:1px solid color-mix(in srgb,var(--scene-color) 50%,transparent);border-radius:50%;box-shadow:inset 0 1px 1px #fff7,0 2px 15px color-mix(in srgb,var(--scene-color) 11%,transparent);transform-style:preserve-3d;animation:featureRingOrbit 28s linear infinite;--ring-tilt:64deg;--ring-turn:-27deg}
+.featureBackground__ring--two{inset:5%;--ring-tilt:68deg;--ring-turn:38deg;animation-duration:37s;animation-direction:reverse;border-color:color-mix(in srgb,var(--scene-secondary) 30%,transparent)}
+.featureBackground__ring--three{inset:-5% 7%;--ring-tilt:75deg;--ring-turn:105deg;animation-duration:45s;opacity:.38}
+.featureBackground__satellite{position:absolute;width:25px;height:25px;border-radius:50%;background:radial-gradient(circle at 30% 20%,#fff,var(--scene-color) 18%,#15202b 75%);box-shadow:inset -2px -2px 4px #0006,0 0 25px color-mix(in srgb,var(--scene-color) 25%,transparent);left:10%;top:29%;animation:featureSatellite 13s ease-in-out infinite}
+.featureBackground__satellite--two{width:12px;height:12px;left:83%;top:73%;animation-delay:-6s;animation-duration:17s}
+.featureBackground__caustics{inset:-30%;opacity:.1;background:repeating-radial-gradient(ellipse at 70% 60%,transparent 0 15%,color-mix(in srgb,var(--scene-color) 40%,transparent) 15.2% 15.5%,transparent 15.7% 21%);transform:rotate(-18deg) scaleY(.5);mask-image:linear-gradient(transparent 35%,#000);animation:featureCaustics 26s ease-in-out infinite alternate}
+.featureBackground__particles{inset:0;width:100%;height:100%;opacity:.85}
+.featureBackground__grain{inset:0;opacity:.045;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' opacity='.6' filter='url(%23n)'/%3E%3C/svg%3E");mix-blend-mode:soft-light}
+.featureBackground--create .featureBackground__sculpture{top:14%;right:-5%}
+.featureBackground--projects .featureBackground__photo{background-position:center 65%;filter:saturate(.65)}
+.featureBackground--projects .featureBackground__sculpture{top:31%;right:-10%;opacity:.44}
+.featureBackground--projects .featureBackground__orb{border-radius:34%;animation-name:featureProjectFloat;transform:rotate(-18deg)}
+.featureBackground--projects .featureBackground__ring{border-radius:35%}
+.featureBackground--credits .featureBackground__sculpture{top:19%;right:-1%;opacity:.55}
+.featureBackground--credits .featureBackground__orb{inset:22%;background:radial-gradient(circle at 27% 18%,#fff7d1,#edbb7455 25%,#b87b2422 50%,#67401877 75%,#ffe5a3aa);box-shadow:inset 2px 2px 7px #fff7cf,inset -16px -20px 38px #68391c88,0 30px 70px #0005,0 0 65px #ffc48a22}
+.featureBackground--credits .featureBackground__ring{border-width:2px}
+.featureBackground--history .featureBackground__sculpture{top:29%;right:-9%;opacity:.5}
+.featureBackground--history .featureBackground__orb{inset:31%;opacity:.7}
+.featureBackground--history .featureBackground__ring--three{inset:-10%;opacity:.65}
+.featureBackground--history .featureBackground__caustics{opacity:.17}
+.featureLibrary{overflow:hidden;min-height:650px}
+.featureLibrary .featureBackground{position:absolute}
+.featureLibrary .featureBackground__veil{background:linear-gradient(90deg,color-mix(in srgb,var(--app-bg) 88%,transparent),color-mix(in srgb,var(--app-bg) 62%,transparent)),linear-gradient(0deg,var(--app-bg),transparent 60%)}
+.featureLibrary .featureBackground__sculpture{top:7%;right:-11%;opacity:.48;width:470px}
+.featureMotionToggle{position:fixed;bottom:17px;left:18px;z-index:45;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:8px 12px;min-height:32px;border:1px solid var(--app-border,#ffffff24);border-radius:999px;background:color-mix(in srgb,var(--app-panel,#191525) 90%,transparent);color:var(--app-muted,#c5bfd0);font:11px var(--app-font,serif);letter-spacing:.02em;cursor:pointer;backdrop-filter:blur(14px);box-shadow:0 4px 16px #0001;transition:color .2s,border-color .2s}
+.featureMotionToggle:hover{color:var(--app-ink);border-color:var(--app-accent)}
+.featureMotionToggle:disabled{cursor:default;opacity:.7}
+.featureMotionToggle svg{flex:none}
+.featureLibrary .featureMotionToggle{position:absolute;left:auto;right:22px;bottom:18px}
+.featureBackground[data-motion="paused"] *{animation-play-state:paused!important}
+
+/* Keep the active task legible while the scene remains visible around it. */
+.featurePage :is(.composerPage,.walletPage,.historyPage,.projStudio){background:transparent;color:var(--app-ink)}
+.featurePage .topbar{background:color-mix(in srgb,var(--app-bg) 75%,transparent);backdrop-filter:blur(22px)}
+.featurePage footer{background:color-mix(in srgb,var(--app-bg) 68%,transparent)}
+.featurePage :is(.composerForm,.reviewPanel,.walletCard,.walletRates,.creditPacks,.walletLedger,.retentionCard,.historyEmpty,.activityRow,.projProjectCard,.projPanel,.projSidebar,.projEmpty,.projVersionTray){background:var(--feature-glass);border-color:var(--app-border);backdrop-filter:blur(22px);box-shadow:0 14px 45px #00000012,inset 0 1px #ffffff08;color:var(--app-ink)}
+.featurePage :is(.walletStats>div,.historyTools form,.historyTools select,.projListControls label){background:var(--feature-glass);border-color:var(--app-border);backdrop-filter:blur(18px)}
+.featurePage :is(.walletHeading h1,.historyHeading h1,.composerHeading h1,.projHero h1,.projWorkspaceHead h1,.projEmpty strong,.projPanelHeader h2,.reviewPanel h2,.walletRates h3,.creditPacks h3,.historyEmpty h3){color:var(--app-ink)}
+.featurePage :is(.composerHeading h1 em,.walletHeading h1 em,.historyHeading h1 em,.projHero h1 em,.sectionLabel,.projEyebrow,.projMicro,.reviewBadge,.topicLabel,.composerFields label,.reviewDetails>span,.reviewCost strong){color:var(--app-accent)}
+.featurePage :is(.composerHeading p,.composerAside>p,.composerAside>div>p,.composerMode small,.walletHeading p,.historyHeading p,.walletRates p,.creditPacks p,.walletEmpty,.historyEmpty p,.historyFooter p,.projHero p,.projWorkspaceHead p,.projCardDesc,.projCardFoot,.projEmpty,.projMuted,.projSideTitle,.projSideMeta,.reviewCost>span,.activityDetail>span,.walletStats span,.retentionCard p){color:var(--app-muted)}
+.featurePage :is(.composerForm textarea,.composerFields input,.composerFields select,.historyTools input,.historyTools select,.projListControls input){background:color-mix(in srgb,var(--app-bg) 72%,transparent);color:var(--app-ink);border-color:var(--app-border)}
+.featurePage :is(input,textarea)::placeholder{color:color-mix(in srgb,var(--app-muted) 75%,transparent)}
+.featurePage .composerAside{padding:24px 20px;border:1px solid var(--app-border);border-radius:var(--app-radius,20px);background:color-mix(in srgb,var(--app-panel) 62%,transparent);backdrop-filter:blur(14px);align-self:start}
+.featurePage .composerOrb{background:radial-gradient(circle at 25% 20%,color-mix(in srgb,var(--app-accent) 50%,transparent),var(--app-panel));color:var(--app-accent);border-color:var(--app-border)}
+.featurePage :is(.composerSteps,.reviewDetails,.composerMode,.ledgerRow,.operationRow,.activityHeader){border-color:var(--app-border);color:var(--app-muted)}
+.featurePage .composerSteps .active,.featurePage .composerAside>div>span,.featurePage .composerMode>span{color:var(--app-accent)!important}
+.featurePage .composerSteps i{background:var(--app-border)}
+.featurePage :is(.back,.subtleButton,.projBack,.projStudio .projTop button){color:var(--app-muted)}
+.featurePage .projAura{display:none}
+.featurePage .projCardGrid{padding-bottom:8px}
+.featurePage .projPrimary{background:var(--app-accent);color:var(--app-accent-ink);box-shadow:0 12px 34px color-mix(in srgb,var(--app-glow) 20%,transparent)}
+.featurePage :is(.projCardIcon,.projTags span,.projSidebar>button.active,.projSidebar>button:hover){background:color-mix(in srgb,var(--app-accent) 12%,transparent);color:var(--app-accent)}
+.featurePage :is(.projListControls button,.projWorkspaceActions button,.projPanelTools button,.projOriginalIdea button:not(.projPrimary),.projEditFields button:not(.projPrimary),.projEmpty button:not(.projPrimary)){background:var(--feature-glass-strong);color:var(--app-ink);border-color:var(--app-border)}
+.featurePage .projSidebar>button{color:var(--app-muted)}
+.featurePage .projInfo{background:color-mix(in srgb,var(--app-accent) 8%,var(--app-panel));color:var(--app-muted);border-color:var(--app-border)}
+.featurePage .projModal{background:var(--app-panel);color:var(--app-ink)}
+.featurePage .projModalBackdrop{backdrop-filter:blur(12px)}
+.featureLibrary :is(.fluxora-library-head,.fluxora-decks){position:relative}
+.fluxora .featureLibrary .studioShell,.fluxora .featureLibrary .studioMain{background:transparent}
+.fluxora .featureLibrary :is(.studioDeck,.studioEmpty,.studioActivity,.studioMemory){background:var(--feature-glass);border-color:var(--app-border);backdrop-filter:blur(18px)}
+.fluxora .featureLibrary .featureMotionToggle{background:color-mix(in srgb,var(--app-panel) 90%,transparent);border:1px solid var(--app-border);color:var(--app-muted);font-size:11px}
+
+[data-color-scheme="light"] .featureBackground__photo{opacity:.32;filter:saturate(.55)}
+[data-color-scheme="light"] .featureBackground__veil{background:linear-gradient(90deg,#eeece5f5,#eeece5c9 55%,#eeece596),linear-gradient(0deg,#eeece5,transparent 70%)}
+[data-color-scheme="light"] .featureBackground__nebula{mix-blend-mode:multiply;opacity:.1}
+[data-color-scheme="light"] .featureBackground__sculpture{opacity:.31}
+[data-color-scheme="light"] .featureBackground__particles{opacity:.3;filter:brightness(.55)}
+[data-color-scheme="light"] .featureLibrary .featureBackground__veil{background:linear-gradient(90deg,#eeece5ed,#eeece5b0),linear-gradient(0deg,#eeece5,transparent 70%)}
+[data-color-scheme="light"] .featurePage{--feature-glass:color-mix(in srgb,var(--app-panel) 89%,transparent)}
+
+@keyframes featurePhotoDrift{from{transform:translate3d(calc(var(--scene-x) * -.4),calc(var(--scene-y) * -.4),0) scale(1.04)}to{transform:translate3d(calc(var(--scene-x) * -.4 - 1%),calc(var(--scene-y) * -.4 + 1%),0) scale(1.1)}}
+@keyframes featureLightOne{to{transform:translate3d(-18%,28%,0) scale(1.2)}}
+@keyframes featureLightTwo{to{transform:translate3d(35%,-16%,0) scale(.8)}}
+@keyframes featureOrbFloat{50%{transform:translate3d(0,-18px,12px)}}
+@keyframes featureProjectFloat{50%{transform:translate3d(0,-18px,12px) rotate(-8deg)}}
+@keyframes featureOrbSheen{to{transform:rotate(360deg)}}
+@keyframes featureRingOrbit{from{transform:rotateZ(var(--ring-turn)) rotateX(var(--ring-tilt)) rotateZ(0)}to{transform:rotateZ(var(--ring-turn)) rotateX(var(--ring-tilt)) rotateZ(360deg)}}
+@keyframes featureSatellite{50%{transform:translate3d(25px,-28px,35px)}}
+@keyframes featureCaustics{to{transform:rotate(-12deg) scaleY(.62) translate3d(-3%,5%,0)}}
+@media(max-width:850px){.featureBackground__sculpture{width:420px;right:-30%!important;top:16%!important;opacity:.36!important}.featureBackground__photo{opacity:.45}.featureBackground__nebula{filter:blur(40px)}.featurePage .composerAside{display:none}.featureLibrary .featureBackground__sculpture{right:-40%!important}.featureMotionToggle{bottom:12px;left:12px;padding:7px 10px}}
+@media(max-width:500px){.featureBackground__sculpture{width:340px;right:-48%!important;opacity:.26!important}.featureBackground__veil{background:linear-gradient(90deg,color-mix(in srgb,var(--app-bg) 90%,transparent),color-mix(in srgb,var(--app-bg) 65%,transparent)),linear-gradient(0deg,var(--app-bg),transparent)}.featureMotionToggle{font-size:10px}.featureLibrary .featureMotionToggle{right:14px;bottom:12px}.featureBackground__caustics{display:none}}
+@media(prefers-reduced-motion:reduce){.featureBackground *{animation:none!important;transition:none!important}.featureBackground__photo{transform:scale(1.04)}.featureBackground__sculpture{transform:none}.featureBackground__ring{transform:rotateZ(var(--ring-turn)) rotateX(var(--ring-tilt))}.featureMotionToggle{transition:none}}

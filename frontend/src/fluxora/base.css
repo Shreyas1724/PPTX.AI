@@ -18,9 +18,9 @@
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --gutter: clamp(18px, 2.6vw, 44px);
 
-  --font-display: 'Inter Tight', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-italic: 'Instrument Serif', Georgia, serif;
+  --font-display: var(--app-font, "Times New Roman", Times, "Liberation Serif", serif);
+  --font-body: var(--app-font, "Times New Roman", Times, "Liberation Serif", serif);
+  --font-italic: var(--app-font, "Times New Roman", Times, "Liberation Serif", serif);
 }
 /* Shared button system — pill geometry, matching the reference's fully-round CTAs. */
 .fx-btn {

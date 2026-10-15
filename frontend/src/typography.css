@@ -1,0 +1,90 @@
+/* One readable typeface across every screen and appearance palette. */
+:root {
+  --app-font: "Times New Roman", Times, "Liberation Serif", serif;
+  font-size: 18px;
+}
+
+#root,
+#root :where(*) {
+  font-family: var(--app-font);
+}
+
+/* Serif headlines need gentler tracking and enough room for their ascenders. */
+#root :is(h1, h2, h3) {
+  letter-spacing: -0.025em;
+}
+.entryIntro h1,
+.fluxora .fx-hero__title {
+  line-height: 1.05;
+}
+.entryNavActions,
+.entrySelectionFoot,
+.entrySelectionHeading,
+.entryFoot,
+.fluxoraFooter {
+  flex-wrap: wrap;
+}
+.entrySelectionFoot,
+.entrySelectionHeading,
+.entryFoot,
+.fluxoraFooter {
+  gap: 14px;
+}
+.entrySwatches > button {
+  min-width: 0;
+}
+.appearance-picker select {
+  max-width: 120px;
+}
+
+@media (max-width: 650px) {
+  .entryNav {
+    column-gap: 12px;
+  }
+  .entryNavActions {
+    gap: 10px;
+  }
+  .entrySwatches {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .entrySwatches > button {
+    gap: 5px;
+  }
+  .entrySwatches button > i {
+    display: none;
+  }
+  .entrySelectionFoot > div {
+    flex: 1 1 135px;
+  }
+  .entrySelectionFoot > button {
+    white-space: normal;
+    gap: 10px;
+  }
+  .fluxora .fx-nav__actions {
+    max-width: 210px;
+  }
+  .fluxora .featureDock button {
+    gap: 12px;
+  }
+  .studioSectionTitle.compact,
+  .reviewDetails,
+  .reviewActions {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 380px) {
+  .fluxora .fx-nav {
+    gap: 10px;
+  }
+  .fluxora .fx-nav__actions {
+    max-width: 160px;
+  }
+  .fluxora .appearance-picker {
+    gap: 6px;
+    padding-inline: 8px;
+  }
+  .fluxora .appearance-picker__label {
+    display: none;
+  }
+}
